@@ -1,0 +1,43 @@
+import { Category } from "../types/category";
+
+export const categories: Category[] = [
+  {
+    id: "cat_convert",
+    title: "Convert",
+    slug: "convert",
+    description: "Easily change your image formats lightning fast.",
+    icon: "lucide:arrow-left-right",
+    color: "text-cyan-500 dark:text-cyan-400",
+    hoverColor: "group-hover:text-cyan-500 dark:group-hover:text-cyan-400",
+    bg: "bg-cyan-500/10",
+    gradient: "from-cyan-500/10 via-cyan-500/5 to-transparent",
+    order: 0,
+    isActive: true,
+  },
+  {
+    id: "cat_compress",
+    title: "Compress",
+    slug: "compress",
+    description: "Make image file sizes smaller without losing quality.",
+    icon: "lucide:minimize-2",
+    color: "text-purple-500 dark:text-purple-400",
+    hoverColor: "group-hover:text-purple-500 dark:group-hover:text-purple-400",
+    bg: "bg-purple-500/10",
+    gradient: "from-purple-500/10 via-purple-500/5 to-transparent",
+    order: 1,
+    isActive: true,
+  },
+  {
+    id: "cat_tools",
+    title: "Tools",
+    slug: "tools",
+    description: "Simple tools to crop, resize, and fix your photos.",
+    icon: "lucide:pen-tool",
+    color: "text-emerald-500 dark:text-emerald-400",
+    hoverColor: "group-hover:text-emerald-500 dark:group-hover:text-emerald-400",
+    bg: "bg-emerald-500/10",
+    gradient: "from-emerald-500/10 via-emerald-500/5 to-transparent",
+    order: 2,
+    isActive: true,
+  },
+];
