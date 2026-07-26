@@ -54,6 +54,15 @@ export class CanvasService {
 
   static exportCanvasToBlob(canvas: HTMLCanvasElement, format: string, quality: number): Promise<Blob> {
     return new Promise((resolve, reject) => {
+      if (format === 'image/svg+xml') {
+        const dataUrl = canvas.toDataURL('image/png');
+        const svgString = `<svg xmlns="http://www.w3.org/2000/svg" width="${canvas.width}" height="${canvas.height}">
+  <image href="${dataUrl}" width="${canvas.width}" height="${canvas.height}" />
+</svg>`;
+        const blob = new Blob([svgString], { type: 'image/svg+xml' });
+        return resolve(blob);
+      }
+
       canvas.toBlob(
         (blob) => {
           if (blob) resolve(blob);
