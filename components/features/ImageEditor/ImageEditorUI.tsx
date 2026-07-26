@@ -8,6 +8,8 @@ import { EditorSidebar } from "./EditorSidebar";
 import { useEditorStore, EditorTool } from "./store";
 import { SizeCheckerTool } from "./tools/SizeCheckerTool";
 import { WatermarkTool } from "./tools/WatermarkTool";
+import { CanvasService } from '@/src/services/canvasService';
+import { VideoConverterService } from '@/src/services/videoConverterService';
 import { 
   Crop, 
   Expand, 
@@ -378,21 +380,27 @@ export function ImageEditorUI({ feature }: { feature: Feature }) {
       const mimeType = exportFormat === 'original' ? imageFile.mimeType : exportFormat;
       let ext = mimeType.split('/')[1] || 'png';
       if (ext === 'jpeg') ext = 'jpg';
+      if (ext === 'svg+xml') ext = 'svg';
       const baseName = imageFile.name.replace(/\.[^/.]+$/, "");
 
-      canvas.toBlob((blob) => {
-        if (!blob) throw new Error('Canvas is empty');
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `edited_${baseName}.${ext}`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        setIsProcessing(false);
-      }, mimeType, 0.9); // Use 0.9 quality for formats that support it
+      let blob: Blob;
+      if (mimeType === 'image/gif') {
+        const pngBlob = await CanvasService.exportCanvasToBlob(canvas, 'image/png', 1.0);
+        blob = await VideoConverterService.convertImageToGif(pngBlob);
+      } else {
+        blob = await CanvasService.exportCanvasToBlob(canvas, mimeType, 0.9);
+      }
 
+      if (!blob) throw new Error('Canvas is empty');
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `edited_${baseName}.${ext}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      setIsProcessing(false);
     } catch (e) {
       console.error(e);
       setIsProcessing(false);
@@ -599,6 +607,8 @@ export function ImageEditorUI({ feature }: { feature: Feature }) {
                 <option value="image/jpeg" className="bg-background text-foreground">JPG</option>
                 <option value="image/png" className="bg-background text-foreground">PNG</option>
                 <option value="image/webp" className="bg-background text-foreground">WEBP</option>
+                <option value="image/gif" className="bg-background text-foreground">GIF</option>
+                <option value="image/svg+xml" className="bg-background text-foreground">SVG</option>
               </select>
             </div>
             <button 
@@ -621,7 +631,7 @@ export function ImageEditorUI({ feature }: { feature: Feature }) {
           <div className="flex gap-2">
             <button 
               onClick={() => document.getElementById('replace-image-input')?.click()}
-              className="px-3 py-2 bg-background border border-border rounded-lg hover:bg-muted transition-colors text-foreground flex items-center gap-2 text-xs font-bold shadow-sm"
+              className="px-3 py-1.5 bg-primary border border-transparent rounded-lg hover:bg-primary/90 transition-colors text-primary-foreground flex items-center gap-2 text-xs font-bold shadow-sm relative z-50"
               title="Upload a new image"
             >
               <ImagePlus className="w-4 h-4" /> Replace

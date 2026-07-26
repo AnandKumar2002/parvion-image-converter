@@ -55,8 +55,8 @@ interface EditorState {
   watermarkRepeated: boolean;
   setWatermarkRepeated: (repeated: boolean) => void;
 
-  exportFormat: 'original' | 'image/png' | 'image/jpeg' | 'image/webp';
-  setExportFormat: (format: 'original' | 'image/png' | 'image/jpeg' | 'image/webp') => void;
+  exportFormat: 'original' | 'image/png' | 'image/jpeg' | 'image/webp' | 'image/gif' | 'image/svg+xml';
+  setExportFormat: (format: 'original' | 'image/png' | 'image/jpeg' | 'image/webp' | 'image/gif' | 'image/svg+xml') => void;
 
   // Reset
   resetEditor: () => void;

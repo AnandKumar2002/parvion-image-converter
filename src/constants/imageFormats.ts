@@ -21,6 +21,7 @@ export const SUPPORTED_OUTPUT_MIME_TYPES: ImageMimeType[] = [
   'image/webp',
   'image/bmp',
   'image/gif',
+  'image/svg+xml',
   'video/mp4' // Enabled via Phase 3 FFmpeg
 ];
 
