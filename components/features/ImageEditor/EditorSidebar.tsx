@@ -29,10 +29,10 @@ export function EditorSidebar({
           </h3>
           <button 
             onClick={onClear}
-            className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors -mr-2"
+            className="p-1.5 bg-destructive/10 hover:bg-destructive text-destructive hover:text-white rounded-lg transition-colors shadow-sm -mr-2 relative z-50"
             title="Clear Image"
           >
-            <Trash2 className="w-5 h-5" />
+            <Trash2 className="w-4 h-4" />
           </button>
         </div>
         {isStudioMode && toolsTabs}
