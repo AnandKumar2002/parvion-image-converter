@@ -1,5 +1,5 @@
 import { CloudUpload, Image as ImageIcon, Scissors } from 'lucide-react';
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { VALIDATION_RULES } from '@/src/constants/validation';
 
 interface UploadBoxProps {
@@ -10,6 +10,20 @@ interface UploadBoxProps {
 
 export function UploadBox({ onFileSelect, isDragging, setIsDragging }: UploadBoxProps) {
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      if (e.clipboardData?.files && e.clipboardData.files.length > 0) {
+        const file = e.clipboardData.files[0];
+        if (file.type.startsWith('image/')) {
+          e.preventDefault();
+          onFileSelect(file);
+        }
+      }
+    };
+    window.addEventListener('paste', handlePaste);
+    return () => window.removeEventListener('paste', handlePaste);
+  }, [onFileSelect]);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
