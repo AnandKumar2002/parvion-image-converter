@@ -2,6 +2,7 @@
 
 import { Menu, X, Search, ChevronDown } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { ThemeToggle } from "../../shared/ThemeToggle";
 import { useSidebar } from "../../providers/SidebarProvider";
 import { categories } from "@/src/data/categories";
@@ -10,6 +11,7 @@ import { DynamicIcon } from "../DynamicIcon";
 
 export default function AppHeader() {
   const { sidebarOpen, toggleSidebar } = useSidebar();
+  const pathname = usePathname();
   
   const activeCategories = categories.filter(c => c.isActive);
 
@@ -28,9 +30,9 @@ export default function AppHeader() {
         <Link href="/" className="font-black text-xl tracking-tight text-foreground flex items-center gap-2">
           <div className="h-8 sm:h-10 shrink-0 flex items-center justify-center">
             {/* Light Mode Logo (Dark Text) */}
-            <img src="/logo-light-mode.png" alt="Parvion Logo" className="h-full w-auto object-contain dark:hidden" />
+            <img src="/logo-light-mode.png" alt="Parvion Logo" fetchPriority="low" loading="lazy" decoding="async" className="h-full w-auto object-contain dark:hidden" />
             {/* Dark Mode Logo (Light Text) */}
-            <img src="/logo-dark-mode.png" alt="Parvion Logo" className="h-full w-auto object-contain hidden dark:block" />
+            <img src="/logo-dark-mode.png" alt="Parvion Logo" fetchPriority="low" loading="lazy" decoding="async" className="h-full w-auto object-contain hidden dark:block" />
           </div>
           <span className="hidden sm:block">Image Converter</span>
         </Link>
@@ -38,11 +40,25 @@ export default function AppHeader() {
 
       {/* Center: Desktop Navigation */}
       <nav className="hidden lg:flex items-center justify-center absolute left-1/2 -translate-x-1/2 h-full">
+        <div className="group h-full flex items-center relative">
+          <Link 
+            href="/"
+            className={`px-4 py-2 text-sm flex items-center gap-1 transition-colors h-full ${
+              pathname === '/' ? 'text-primary font-bold' : 'text-muted-foreground hover:text-foreground font-medium'
+            }`}
+          >
+            Home
+          </Link>
+        </div>
         {activeCategories.map((cat) => (
           <div key={cat.id} className="group h-full flex items-center relative">
             <Link 
               href={`/${cat.slug}`}
-              className="px-4 py-2 text-sm font-bold text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors h-full"
+              className={`px-4 py-2 text-sm flex items-center gap-1 transition-colors h-full ${
+                pathname === `/${cat.slug}` || pathname.startsWith(`/${cat.slug}/`) 
+                  ? 'text-primary font-bold' 
+                  : 'text-muted-foreground hover:text-foreground font-medium'
+              }`}
             >
               {cat.title}
               <ChevronDown className="w-4 h-4 opacity-50 group-hover:opacity-100 group-hover:-rotate-180 transition-all duration-300" />

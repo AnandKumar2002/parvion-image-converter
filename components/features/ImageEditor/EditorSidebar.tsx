@@ -21,7 +21,7 @@ export function EditorSidebar({
   exportButton
 }: EditorSidebarProps) {
   return (
-    <div className="w-full lg:w-80 flex-shrink-0 flex flex-col bg-card/60 backdrop-blur-xl border border-border rounded-3xl shadow-sm overflow-hidden h-full">
+    <div className="w-full lg:w-80 flex-shrink-0 flex flex-col bg-card/60 backdrop-blur-xl border border-border rounded-3xl shadow-sm overflow-hidden h-auto lg:h-full">
       <div className="p-6 pb-2 flex-shrink-0 flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <h3 className="text-xl font-bold text-foreground">

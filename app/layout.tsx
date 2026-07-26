@@ -38,6 +38,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: `window.__name = function (func) { return func; }` }} />
         {process.env.NEXT_PUBLIC_ADSENSE_PUB_ID && (
           <Script
             async

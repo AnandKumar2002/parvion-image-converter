@@ -56,8 +56,8 @@ export default function AppSidebar() {
         <div className="flex h-16 items-center justify-between px-6 flex-shrink-0 border-b border-border">
           <div className="flex items-center gap-2 mr-2">
             <div className="h-8 shrink-0 flex items-center justify-center">
-              <img src="/logo-light-mode.png" alt="Parvion Logo" className="h-full w-auto object-contain dark:hidden" />
-              <img src="/logo-dark-mode.png" alt="Parvion Logo" className="h-full w-auto object-contain hidden dark:block" />
+              <img src="/logo-light-mode.png" alt="Parvion Logo" fetchPriority="low" loading="lazy" decoding="async" className="h-full w-auto object-contain dark:hidden" />
+              <img src="/logo-dark-mode.png" alt="Parvion Logo" fetchPriority="low" loading="lazy" decoding="async" className="h-full w-auto object-contain hidden dark:block" />
             </div>
             <span className="font-bold text-lg tracking-tight text-foreground leading-tight">
               Image Converter

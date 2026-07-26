@@ -421,7 +421,7 @@ export function ImageEditorUI({ feature }: { feature: Feature }) {
   }
 
   return (
-    <div className="w-full flex flex-col lg:flex-row gap-6 animate-fade-in-up h-[800px] max-h-[80vh]">
+    <div className="w-full flex flex-col-reverse lg:flex-row gap-6 animate-fade-in-up lg:h-[800px] lg:max-h-[80vh]">
       
       <EditorSidebar 
         featureName={feature.name}
@@ -614,7 +614,7 @@ export function ImageEditorUI({ feature }: { feature: Feature }) {
       />
 
       {/* Main Canvas Area */}
-      <div className="flex-grow bg-card/40 border border-border rounded-3xl p-4 sm:p-6 backdrop-blur-xl shadow-sm flex flex-col relative min-h-0">
+      <div className="flex-grow bg-card/40 border border-border rounded-3xl p-4 sm:p-6 backdrop-blur-xl shadow-sm flex flex-col relative h-[60vh] min-h-[400px] lg:h-auto lg:min-h-0">
         
         {/* Toolbar Header */}
         <div className="w-full flex justify-between items-center mb-4 z-10 shrink-0 min-h-[40px]">
@@ -680,12 +680,12 @@ export function ImageEditorUI({ feature }: { feature: Feature }) {
               alt="Crop preview"
               src={imageFile.previewUrl}
               className="max-h-full max-w-full object-contain"
-              style={{ maxHeight: 'calc(80vh - 160px)', transform: `scale(${scaleX}, ${scaleY}) rotate(${rotation}deg)` }}
+              style={{ maxHeight: '100%', transform: `scale(${scaleX}, ${scaleY}) rotate(${rotation}deg)` }}
             />
           </ReactCrop>
         ) : (
-          <div className="relative max-h-full max-w-full flex items-center justify-center" style={{ maxHeight: 'calc(80vh - 160px)' }}>
-            <div className="relative inline-block h-full w-full flex items-center justify-center">
+          <div className="relative h-full w-full max-h-full max-w-full flex items-center justify-center">
+            <div className="relative h-full w-full flex items-center justify-center">
               <img
                 ref={imgRef}
                 alt="Preview"
