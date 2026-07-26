@@ -18,7 +18,7 @@ export function ImagePreview({ imageFile, onClear, onFileSelect }: ImagePreviewP
           <>
             <button 
               onClick={() => document.getElementById('preview-replace-input')?.click()}
-              className="px-3 py-1.5 bg-background border border-border rounded-lg hover:bg-muted transition-colors text-foreground flex items-center gap-2 text-xs font-bold shadow-sm cursor-pointer"
+              className="px-3 py-1.5 bg-primary border border-transparent rounded-lg hover:bg-primary/90 transition-colors text-primary-foreground flex items-center gap-2 text-xs font-bold shadow-sm cursor-pointer relative z-50"
               title="Replace image"
             >
               <ImagePlus className="w-4 h-4" /> Replace
@@ -40,10 +40,10 @@ export function ImagePreview({ imageFile, onClear, onFileSelect }: ImagePreviewP
         )}
         <button 
           onClick={onClear}
-          className="p-2 bg-background/50 border border-transparent hover:bg-destructive/10 text-muted-foreground hover:text-destructive rounded-lg transition-colors cursor-pointer"
+          className="p-1.5 bg-destructive/10 hover:bg-destructive text-destructive hover:text-white rounded-lg transition-colors cursor-pointer shadow-sm relative z-50"
           title="Remove image"
         >
-          <X className="w-5 h-5" />
+          <X className="w-4 h-4" />
         </button>
       </div>
 
@@ -51,7 +51,7 @@ export function ImagePreview({ imageFile, onClear, onFileSelect }: ImagePreviewP
         <img 
           src={imageFile.previewUrl} 
           alt={imageFile.name} 
-          className="object-cover w-full h-full" 
+          className="object-contain w-full h-full" 
         />
       </div>
       
