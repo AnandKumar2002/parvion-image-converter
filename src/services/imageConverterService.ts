@@ -1,5 +1,6 @@
 import { ConversionOptions, ImageFile } from '../types/image.types';
 import { CanvasService } from './canvasService';
+import { VideoConverterService } from './videoConverterService';
 
 export class ImageConverterService {
   /**
@@ -17,7 +18,10 @@ export class ImageConverterService {
             // Export to final blob
             let blob: Blob;
 
-            if (options.targetSizeKb && (options.format === 'image/jpeg' || options.format === 'image/webp')) {
+            if (options.format === 'image/gif') {
+              const pngBlob = await CanvasService.exportCanvasToBlob(canvas, 'image/png', 1.0);
+              blob = await VideoConverterService.convertImageToGif(pngBlob);
+            } else if (options.targetSizeKb && (options.format === 'image/jpeg' || options.format === 'image/webp')) {
               // Binary Search Compression
               const targetBytes = options.targetSizeKb * 1024;
               let minQ = 0.0;

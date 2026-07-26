@@ -51,4 +51,30 @@ export class VideoConverterService {
       throw new Error('Failed to convert GIF to MP4.');
     }
   }
+  static async convertImageToGif(imageBlob: Blob): Promise<Blob> {
+    if (!this.ffmpeg) {
+      await this.load();
+    }
+
+    const ffmpeg = this.ffmpeg!;
+    const inputName = `input_${Date.now()}.png`;
+    const outputName = `output_${Date.now()}.gif`;
+
+    try {
+      await ffmpeg.writeFile(inputName, await fetchFile(imageBlob));
+
+      // Convert image to a high quality 1-frame GIF
+      await ffmpeg.exec(['-i', inputName, outputName]);
+
+      const data = await ffmpeg.readFile(outputName);
+      
+      await ffmpeg.deleteFile(inputName);
+      await ffmpeg.deleteFile(outputName);
+
+      return new Blob([data as any], { type: 'image/gif' });
+    } catch (error) {
+      console.error('FFmpeg GIF Conversion Error:', error);
+      throw new Error('Failed to convert image to GIF.');
+    }
+  }
 }
