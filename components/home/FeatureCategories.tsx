@@ -4,6 +4,7 @@ import PageHeader from "../shared/PageHeader";
 import { DynamicIcon } from "../layout/DynamicIcon";
 import { categories } from "@/src/data/categories";
 import { features } from "@/src/data/features";
+import { AdPlaceholder } from "../shared/AdPlaceholder";
 
 export default function FeatureCategories() {
   const displayCategories = categories
@@ -58,8 +59,8 @@ export default function FeatureCategories() {
             </Link>
           </div>
 
-          <div className="w-full h-24 sm:h-32 bg-primary rounded-lg opacity-80 mt-20 -mb-4 flex items-center justify-center">
-             <span className="text-xs text-primary-foreground uppercase font-bold tracking-widest">Advertisement</span>
+          <div className="w-full mt-20 -mb-4">
+             <AdPlaceholder />
           </div>
         </div>
       ))}

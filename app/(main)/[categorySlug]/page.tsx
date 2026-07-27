@@ -5,6 +5,7 @@ import PageHeader from "@/components/shared/PageHeader";
 import { DynamicIcon } from "@/components/layout/DynamicIcon";
 import { categories } from "@/src/data/categories";
 import { features } from "@/src/data/features";
+import { AdPlaceholder } from "@/components/shared/AdPlaceholder";
 
 interface PageProps {
   params: Promise<{ categorySlug: string }>;
@@ -25,11 +26,6 @@ export default async function CategoryPage({ params }: PageProps) {
 
   return (
     <div className="w-full pb-12 sm:pb-16 space-y-12 animate-fade-in-up">
-      {/* Top Advertisement */}
-      <div className="w-full h-24 sm:h-32 bg-primary rounded-lg opacity-80 flex items-center justify-center">
-         <span className="text-xs text-primary-foreground uppercase font-bold tracking-widest">Advertisement</span>
-      </div>
-
       <PageHeader
         title={category.title}
         description={category.description}
@@ -62,9 +58,8 @@ export default async function CategoryPage({ params }: PageProps) {
           </Link>
         ))}
       </div>
-
-      <div className="w-full h-24 sm:h-32 bg-primary rounded-lg opacity-80 mt-2 flex items-center justify-center">
-         <span className="text-xs text-primary-foreground uppercase font-bold tracking-widest">Advertisement</span>
+      <div className="w-full mt-2">
+         <AdPlaceholder />
       </div>
     </div>
   );

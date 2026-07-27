@@ -14,7 +14,7 @@ export default function Home() {
       </HeroSection>
 
       {/* Full Width Ad Slot after Hero Section */}
-      <div className="w-full">
+      <div className="w-full mt-2 mb-4">
         <AdPlaceholder />
       </div>
 
