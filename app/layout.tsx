@@ -39,6 +39,8 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: `window.__name = function (func) { return func; }` }} />
+      </head>
+      <body className={`${inter.className} min-h-screen bg-background text-foreground selection:bg-cyan-500/30 font-sans flex relative`} suppressHydrationWarning>
         {process.env.NEXT_PUBLIC_ADSENSE_PUB_ID && (
           <Script
             async
@@ -47,8 +49,6 @@ export default function RootLayout({
             strategy="afterInteractive"
           />
         )}
-      </head>
-      <body className={`${inter.className} min-h-screen bg-background text-foreground selection:bg-cyan-500/30 font-sans flex relative`} suppressHydrationWarning>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
