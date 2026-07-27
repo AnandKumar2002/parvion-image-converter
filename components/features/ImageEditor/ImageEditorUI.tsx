@@ -23,7 +23,9 @@ import {
   Stamp,
   Undo2,
   Redo2,
-  ImagePlus
+  ImagePlus,
+  X,
+  ChevronDown
 } from "lucide-react";
 import ReactCrop, { type Crop as CropType } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
@@ -53,6 +55,32 @@ export function ImageEditorUI({ feature }: { feature: Feature }) {
 
   const [patternUrl, setPatternUrl] = useState<string | null>(null);
   const [patternSize, setPatternSize] = useState<number>(100);
+
+  type MeasurementUnit = 'px' | '%' | 'in' | 'cm';
+  const [unit, setUnit] = useState<MeasurementUnit>('px');
+  const [dpi, setDpi] = useState<number>(300);
+
+  const pxToUnit = (px: number, u: MeasurementUnit, d: number, naturalSize?: number): number => {
+    if (u === 'px') return px;
+    if (u === '%') return naturalSize ? (px / naturalSize) * 100 : 0;
+    if (u === 'in') return px / d;
+    if (u === 'cm') return px / (d / 2.54);
+    return px;
+  };
+
+  const unitToPx = (val: number, u: MeasurementUnit, d: number, naturalSize?: number): number => {
+    if (u === 'px') return val;
+    if (u === '%') return naturalSize ? (val / 100) * naturalSize : 0;
+    if (u === 'in') return val * d;
+    if (u === 'cm') return val * (d / 2.54);
+    return val;
+  };
+
+  const formatUnitVal = (val: number) => Math.round(val * 100) / 100;
+
+  const [customCropW, setCustomCropW] = useState<number | ''>('');
+  const [customCropH, setCustomCropH] = useState<number | ''>('');
+  const [customCropLinked, setCustomCropLinked] = useState<boolean>(false);
 
   const [isProcessing, setIsProcessing] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
@@ -423,6 +451,8 @@ export function ImageEditorUI({ feature }: { feature: Feature }) {
           onFileSelect={handleFileSelect} 
           isDragging={isDragging} 
           setIsDragging={setIsDragging} 
+          title={activeTool === 'size-checker' ? 'Upload to Check Size' : `Upload to ${activeTool.charAt(0).toUpperCase() + activeTool.slice(1)}`}
+          subtitle="Drop an image to start editing"
         />
       </div>
     );
@@ -461,7 +491,8 @@ export function ImageEditorUI({ feature }: { feature: Feature }) {
                 <div className="flex flex-wrap gap-2 mb-2">
                   {[
                     { label: 'Free', aspect: undefined },
-                    { label: 'Square 1:1', aspect: 1 },
+                    { label: 'Passport (2x2 in)', aspect: 1 },
+                    { label: 'Passport (35x45 mm)', aspect: 35 / 45 },
                     { label: '16:9', aspect: 16 / 9 },
                     { label: '4:3', aspect: 4 / 3 },
                     { label: '3:2', aspect: 3 / 2 },
@@ -506,6 +537,119 @@ export function ImageEditorUI({ feature }: { feature: Feature }) {
                     </button>
                   ))}
                 </div>
+                <div className="flex flex-col gap-2 mt-2 mb-2">
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-bold text-xs text-muted-foreground uppercase tracking-wider">Custom Size</h4>
+                      <div className="relative">
+                        <select 
+                          value={unit} 
+                          onChange={(e) => setUnit(e.target.value as MeasurementUnit)}
+                          className="appearance-none bg-background/50 border border-border rounded-lg px-3 py-1.5 pr-7 text-[11px] font-bold text-foreground uppercase tracking-wider focus:outline-none focus:border-primary cursor-pointer hover:bg-background transition-colors"
+                        >
+                          <option value="px">PX</option>
+                          <option value="%">%</option>
+                          <option value="in">IN</option>
+                          <option value="cm">CM</option>
+                        </select>
+                        <ChevronDown className="w-3 h-3 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground" />
+                      </div>
+                    </div>
+                    {(unit === 'in' || unit === 'cm') && (
+                      <div className="flex items-center justify-between bg-primary/5 border border-primary/20 rounded-lg p-2 px-3 mb-1">
+                        <span className="text-xs font-bold text-primary">Print Resolution (DPI)</span>
+                        <input type="number" value={dpi} onChange={(e) => setDpi(Number(e.target.value) || 300)} className="w-16 bg-background border border-border rounded-md px-2 py-1 text-xs text-center font-bold focus:outline-none focus:border-primary" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3 bg-background/30 p-4 rounded-xl border border-border/50">
+                    <div className="flex-1">
+                      <label className="text-xs font-bold text-muted-foreground mb-1 block">Width</label>
+                      <input 
+                        type="number" step="any"
+                        value={customCropW === '' ? '' : formatUnitVal(pxToUnit(customCropW, unit, dpi, imgRef.current?.naturalWidth))}
+                        onChange={(e) => {
+                          const numVal = e.target.value ? Number(e.target.value) : '';
+                          const w = numVal === '' ? '' : unitToPx(numVal, unit, dpi, imgRef.current?.naturalWidth);
+                          setCustomCropW(w);
+                          
+                          let wNum = Number(w);
+                          let hNum = Number(customCropH);
+                          
+                          if (customCropLinked && wNum > 0 && cropAspect) {
+                            hNum = Math.round(wNum / cropAspect);
+                            setCustomCropH(hNum);
+                          }
+                          
+                          if (wNum > 0 && hNum > 0 && imgRef.current) {
+                            commitHistory();
+                            setCropAspect(wNum / hNum);
+                            const imgAspect = imgRef.current.naturalWidth / imgRef.current.naturalHeight;
+                            let targetWidthPct = (wNum / imgRef.current.naturalWidth) * 100;
+                            let targetHeightPct = (hNum / imgRef.current.naturalHeight) * 100;
+                            
+                            if (targetWidthPct > 100) { targetWidthPct = 100; targetHeightPct = (100 * imgAspect) / (wNum/hNum); }
+                            if (targetHeightPct > 100) { targetHeightPct = 100; targetWidthPct = (100 * (wNum/hNum)) / imgAspect; }
+                            
+                            setCrop({
+                              unit: '%',
+                              width: targetWidthPct,
+                              height: targetHeightPct,
+                              x: (100 - targetWidthPct) / 2,
+                              y: (100 - targetHeightPct) / 2
+                            });
+                          }
+                        }}
+                        className="w-full bg-background border border-border rounded-lg px-3 py-2 text-foreground font-bold focus:outline-none focus:border-primary"
+                      />
+                    </div>
+                    <div className="flex flex-col items-center justify-center pt-5">
+                      <button onClick={() => setCustomCropLinked(prev => !prev)} className={`p-2 rounded-lg transition-colors ${customCropLinked ? 'bg-primary/10 text-primary shadow-sm' : 'bg-background text-muted-foreground hover:bg-border/50'}`}>
+                        {customCropLinked ? <LinkIcon className="w-4 h-4" /> : <Unlink className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    <div className="flex-1">
+                      <label className="text-xs font-bold text-muted-foreground mb-1 block">Height</label>
+                      <input 
+                        type="number" step="any"
+                        value={customCropH === '' ? '' : formatUnitVal(pxToUnit(customCropH, unit, dpi, imgRef.current?.naturalHeight))}
+                        onChange={(e) => {
+                          const numVal = e.target.value ? Number(e.target.value) : '';
+                          const h = numVal === '' ? '' : unitToPx(numVal, unit, dpi, imgRef.current?.naturalHeight);
+                          setCustomCropH(h);
+                          
+                          let wNum = Number(customCropW);
+                          let hNum = Number(h);
+                          
+                          if (customCropLinked && hNum > 0 && cropAspect) {
+                            wNum = Math.round(hNum * cropAspect);
+                            setCustomCropW(wNum);
+                          }
+                          
+                          if (wNum > 0 && hNum > 0 && imgRef.current) {
+                            commitHistory();
+                            setCropAspect(wNum / hNum);
+                            const imgAspect = imgRef.current.naturalWidth / imgRef.current.naturalHeight;
+                            let targetWidthPct = (wNum / imgRef.current.naturalWidth) * 100;
+                            let targetHeightPct = (hNum / imgRef.current.naturalHeight) * 100;
+                            
+                            if (targetWidthPct > 100) { targetWidthPct = 100; targetHeightPct = (100 * imgAspect) / (wNum/hNum); }
+                            if (targetHeightPct > 100) { targetHeightPct = 100; targetWidthPct = (100 * (wNum/hNum)) / imgAspect; }
+                            
+                            setCrop({
+                              unit: '%',
+                              width: targetWidthPct,
+                              height: targetHeightPct,
+                              x: (100 - targetWidthPct) / 2,
+                              y: (100 - targetHeightPct) / 2
+                            });
+                          }
+                        }}
+                        className="w-full bg-background border border-border rounded-lg px-3 py-2 text-foreground font-bold focus:outline-none focus:border-primary"
+                      />
+                    </div>
+                  </div>
+                </div>
                 <p className="text-sm text-foreground">Drag on the image to select a crop area.</p>
               </div>
             )}
@@ -540,7 +684,6 @@ export function ImageEditorUI({ feature }: { feature: Feature }) {
 
             {activeTool === 'resize' && (
               <div className="space-y-6">
-                <h4 className="font-bold text-sm text-muted-foreground uppercase tracking-wider">Resize Options</h4>
                 <div className="flex flex-wrap gap-2">
                   {[
                     { label: '4K UHD', w: 3840, h: 2160 },
@@ -567,10 +710,45 @@ export function ImageEditorUI({ feature }: { feature: Feature }) {
                     </button>
                   ))}
                 </div>
-                <div className="flex items-center gap-3 bg-background/30 p-4 rounded-xl border border-border/50">
-                  <div className="flex-1">
-                    <label className="text-xs font-bold text-muted-foreground mb-1 block">Width (px)</label>
-                    <input type="number" value={resizeWidth} onChange={(e) => { commitHistory(); handleResizeWidthChange(e.target.value); }} className="w-full bg-background border border-border rounded-lg px-3 py-2 text-foreground font-bold focus:outline-none focus:border-primary" />
+                <div className="flex flex-col gap-2 mt-2 mb-2">
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-bold text-xs text-muted-foreground uppercase tracking-wider">Custom Size</h4>
+                      <div className="relative">
+                        <select 
+                          value={unit} 
+                          onChange={(e) => setUnit(e.target.value as MeasurementUnit)}
+                          className="appearance-none bg-background/50 border border-border rounded-lg px-3 py-1.5 pr-7 text-[11px] font-bold text-foreground uppercase tracking-wider focus:outline-none focus:border-primary cursor-pointer hover:bg-background transition-colors"
+                        >
+                          <option value="px">PX</option>
+                          <option value="%">%</option>
+                          <option value="in">IN</option>
+                          <option value="cm">CM</option>
+                        </select>
+                        <ChevronDown className="w-3 h-3 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground" />
+                      </div>
+                    </div>
+                    {(unit === 'in' || unit === 'cm') && (
+                      <div className="flex items-center justify-between bg-primary/5 border border-primary/20 rounded-lg p-2 px-3 mb-1">
+                        <span className="text-xs font-bold text-primary">Print Resolution (DPI)</span>
+                        <input type="number" value={dpi} onChange={(e) => setDpi(Number(e.target.value) || 300)} className="w-16 bg-background border border-border rounded-md px-2 py-1 text-xs text-center font-bold focus:outline-none focus:border-primary" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3 bg-background/30 p-4 rounded-xl border border-border/50">
+                    <div className="flex-1">
+                    <label className="text-xs font-bold text-muted-foreground mb-1 block">Width</label>
+                    <input 
+                      type="number" step="any"
+                      value={resizeWidth === '' ? '' : formatUnitVal(pxToUnit(resizeWidth, unit, dpi, imgRef.current?.naturalWidth))} 
+                      onChange={(e) => { 
+                        commitHistory();
+                        const numVal = e.target.value ? Number(e.target.value) : '';
+                        const wStr = numVal === '' ? '' : unitToPx(numVal, unit, dpi, imgRef.current?.naturalWidth).toString();
+                        handleResizeWidthChange(wStr); 
+                      }} 
+                      className="w-full bg-background border border-border rounded-lg px-3 py-2 text-foreground font-bold focus:outline-none focus:border-primary" 
+                    />
                   </div>
                   <div className="flex flex-col items-center justify-center pt-5">
                     <button onClick={() => { commitHistory(); toggleMaintainAspect(); }} className={`p-2 rounded-lg transition-colors ${maintainAspectRatio ? 'bg-primary/10 text-primary shadow-sm' : 'bg-background text-muted-foreground hover:bg-border/50'}`}>
@@ -578,12 +756,23 @@ export function ImageEditorUI({ feature }: { feature: Feature }) {
                     </button>
                   </div>
                   <div className="flex-1">
-                    <label className="text-xs font-bold text-muted-foreground mb-1 block">Height (px)</label>
-                    <input type="number" value={resizeHeight} onChange={(e) => { commitHistory(); handleResizeHeightChange(e.target.value); }} className="w-full bg-background border border-border rounded-lg px-3 py-2 text-foreground font-bold focus:outline-none focus:border-primary" />
+                    <label className="text-xs font-bold text-muted-foreground mb-1 block">Height</label>
+                    <input 
+                      type="number" step="any"
+                      value={resizeHeight === '' ? '' : formatUnitVal(pxToUnit(resizeHeight, unit, dpi, imgRef.current?.naturalHeight))} 
+                      onChange={(e) => { 
+                        commitHistory(); 
+                        const numVal = e.target.value ? Number(e.target.value) : '';
+                        const hStr = numVal === '' ? '' : unitToPx(numVal, unit, dpi, imgRef.current?.naturalHeight).toString();
+                        handleResizeHeightChange(hStr); 
+                      }} 
+                      className="w-full bg-background border border-border rounded-lg px-3 py-2 text-foreground font-bold focus:outline-none focus:border-primary" 
+                    />
                   </div>
                 </div>
               </div>
-            )}
+            </div>
+          )}
 
             {activeTool === 'size-checker' && (
               <SizeCheckerTool imageFile={imageFile} imgRef={imgRef} />
@@ -595,28 +784,28 @@ export function ImageEditorUI({ feature }: { feature: Feature }) {
           </>
         }
         exportButton={
-          <div className="space-y-3">
-            <div className="flex items-center justify-between bg-background/50 border border-border p-2 rounded-lg">
-              <label className="text-xs font-bold text-muted-foreground px-2">Format</label>
+          <div className="flex items-stretch gap-2">
+            <div className="relative w-[35%] min-w-[90px]">
               <select 
                 value={exportFormat}
                 onChange={(e) => setExportFormat(e.target.value as any)}
-                className="bg-transparent text-xs font-bold text-foreground border-none outline-none focus:ring-0 cursor-pointer"
+                className="appearance-none w-full h-full bg-background/50 border border-border rounded-xl px-3 py-3 pr-7 text-xs font-bold text-foreground focus:outline-none focus:border-primary cursor-pointer hover:bg-background transition-colors"
               >
-                <option value="original" className="bg-background text-foreground">Original</option>
-                <option value="image/jpeg" className="bg-background text-foreground">JPG</option>
-                <option value="image/png" className="bg-background text-foreground">PNG</option>
-                <option value="image/webp" className="bg-background text-foreground">WEBP</option>
-                <option value="image/gif" className="bg-background text-foreground">GIF</option>
-                <option value="image/svg+xml" className="bg-background text-foreground">SVG</option>
+                <option value="original">Original</option>
+                <option value="image/jpeg">JPG</option>
+                <option value="image/png">PNG</option>
+                <option value="image/webp">WEBP</option>
+                <option value="image/gif">GIF</option>
+                <option value="image/svg+xml">SVG</option>
               </select>
+              <ChevronDown className="w-4 h-4 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground" />
             </div>
             <button 
               onClick={handleExport}
               disabled={isProcessing}
-              className="w-full py-4 bg-primary text-primary-foreground font-black rounded-xl shadow-sm hover:shadow-primary/30 hover:-translate-y-1 transition-all duration-300 text-lg flex items-center justify-center gap-3 disabled:opacity-50 disabled:hover:translate-y-0"
+              className="flex-1 py-3 bg-primary text-primary-foreground font-black rounded-xl shadow-sm hover:shadow-primary/30 hover:-translate-y-0.5 transition-all duration-300 text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:hover:translate-y-0"
             >
-              {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
+              {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
               Export Image
             </button>
           </div>
