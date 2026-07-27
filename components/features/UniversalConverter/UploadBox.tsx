@@ -6,9 +6,11 @@ interface UploadBoxProps {
   onFileSelect: (file: File) => void;
   isDragging: boolean;
   setIsDragging: (isDragging: boolean) => void;
+  title?: string;
+  subtitle?: string;
 }
 
-export function UploadBox({ onFileSelect, isDragging, setIsDragging }: UploadBoxProps) {
+export function UploadBox({ onFileSelect, isDragging, setIsDragging, title = "Drop image here", subtitle = "or click to browse from your device" }: UploadBoxProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -82,8 +84,8 @@ export function UploadBox({ onFileSelect, isDragging, setIsDragging }: UploadBox
           <CloudUpload className={`text-cyan-500 dark:text-cyan-400 w-12 h-12 sm:w-16 sm:h-16 z-0 transition-transform duration-500 ${isDragging ? 'scale-110' : 'group-hover:scale-110'}`} />
         </div>
         
-        <h3 className="text-2xl sm:text-3xl font-extrabold text-foreground mb-3 sm:mb-4 relative z-0 pointer-events-none">Drop image here</h3>
-        <p className="text-base sm:text-lg text-muted-foreground mb-10 sm:mb-12 text-center font-light relative z-0 pointer-events-none">or click to browse from your device</p>
+        <h3 className="text-2xl sm:text-3xl font-extrabold text-foreground mb-3 sm:mb-4 relative z-0 pointer-events-none">{title}</h3>
+        <p className="text-base sm:text-lg text-muted-foreground mb-10 sm:mb-12 text-center font-light relative z-0 pointer-events-none">{subtitle}</p>
         
         {/* Decorative Background Elements */}
         <ImageIcon className="absolute top-8 sm:top-12 right-8 sm:right-12 text-foreground/5 w-16 h-16 sm:w-20 sm:h-20 rotate-12 group-hover:rotate-45 group-hover:scale-110 transition-transform duration-1000 pointer-events-none" />

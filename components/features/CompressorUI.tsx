@@ -80,6 +80,8 @@ export function CompressorUI({ feature }: { feature: Feature }) {
           onFileSelect={handleFileSelect} 
           isDragging={isDragging} 
           setIsDragging={setIsDragging} 
+          title="Upload to Compress"
+          subtitle="Drop an image to compress and reduce file size"
         />
       ) : (
         <ImagePreview imageFile={imageFile} onClear={handleClear} onFileSelect={handleFileSelect} />

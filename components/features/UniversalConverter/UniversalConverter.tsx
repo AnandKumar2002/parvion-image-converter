@@ -96,6 +96,8 @@ export function UniversalConverter({ featureSlug }: { featureSlug?: string }) {
           onFileSelect={handleFileSelect} 
           isDragging={isDragging} 
           setIsDragging={setIsDragging} 
+          title="Upload to Convert Format"
+          subtitle="Drop an image to start converting formats"
         />
       ) : (
         <ImagePreview imageFile={imageFile} onClear={handleClear} onFileSelect={handleFileSelect} />
