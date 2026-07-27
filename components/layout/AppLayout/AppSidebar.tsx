@@ -50,7 +50,7 @@ export default function AppSidebar() {
 
       {/* Responsive Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-50 w-80 h-screen flex flex-col bg-sidebar/95 backdrop-blur-xl border-r border-border transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
+        className={`fixed inset-y-0 left-0 z-50 w-80 flex flex-col bg-sidebar/95 backdrop-blur-xl border-r border-border transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
           }`}
       >
         <div className="flex h-16 items-center justify-between px-6 flex-shrink-0 border-b border-border">
