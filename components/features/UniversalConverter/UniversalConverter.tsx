@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useFileUpload } from '@/src/hooks/useFileUpload';
 import { useImageConverter } from '@/src/hooks/useImageConverter';
 import { ImageMimeType } from '@/src/types/image.types';
@@ -79,12 +79,20 @@ export function UniversalConverter({ featureSlug }: { featureSlug?: string }) {
   };
 
   const error = uploadError || convertError;
+  const errorRef = useRef<HTMLDivElement>(null);
+
+  // Scroll to error message whenever it appears
+  useEffect(() => {
+    if (error && errorRef.current) {
+      errorRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [error]);
 
   return (
     <div className="w-full space-y-6 animate-fade-in-up">
 
       {error && (
-        <div className="bg-destructive/10 border border-destructive/20 text-destructive px-5 py-4 rounded-2xl flex items-center gap-3 font-medium">
+        <div ref={errorRef} className="bg-destructive/10 border border-destructive/20 text-destructive px-5 py-4 rounded-2xl flex items-center gap-3 font-medium">
           <AlertCircle className="w-5 h-5 shrink-0" />
           {error}
         </div>
