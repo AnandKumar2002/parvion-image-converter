@@ -15,6 +15,12 @@ export const metadata: Metadata = {
   description: "Convert, compress, and edit your images instantly. Your photos never leave your device, keeping them 100% private and secure.",
   keywords: ["image converter", "image compressor", "free online image tools", "privacy image editor", "local image processing", "Parvion"],
   authors: [{ name: "Anand Kumar" }],
+  verification: {
+    google: "ca-pub-8823925019937744",
+  },
+  other: {
+    "google-adsense-account": "ca-pub-8823925019937744",
+  },
   openGraph: {
     type: "website",
     locale: "en_US",
