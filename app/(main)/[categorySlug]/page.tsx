@@ -35,28 +35,48 @@ export default async function CategoryPage({ params }: PageProps) {
       />
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {categoryFeatures.map((feature, fIndex) => (
-          <Link
-            key={fIndex}
-            href={`/${category.slug}/${feature.slug}`}
-            className="bg-card/60 border border-border shadow-sm p-6 sm:p-8 rounded-lg hover:shadow-xl hover:bg-card transition-all duration-500 group cursor-pointer relative overflow-hidden flex flex-col"
-          >
-            <div className={`absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-700 ${category.gradient}`}></div>
-            
-            <div className={`w-12 h-12 rounded-lg flex items-center justify-center mb-6 transition-transform duration-500 group-hover:scale-110 relative z-10 ${category.bg}`}>
-               <DynamicIcon icon={feature.icon} className={`w-6 h-6 ${category.color}`} />
+        {categoryFeatures.map((feature, fIndex) => {
+          const cardClasses = "bg-card/60 border border-border shadow-sm p-6 sm:p-8 rounded-lg transition-all duration-500 group relative overflow-hidden flex flex-col";
+
+          const cardContent = (
+            <>
+              <div className={`absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-700 ${category.gradient}`}></div>
+
+              {/* Coming Soon badge */}
+              {feature.isComingSoon && (
+                <div className="absolute top-3 right-3 z-20 bg-amber-500/20 text-amber-500 border border-amber-500/30 text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full">
+                  Coming Soon
+                </div>
+              )}
+
+              <div className={`w-12 h-12 rounded-lg flex items-center justify-center mb-6 transition-transform duration-500 group-hover:scale-110 relative z-10 ${category.bg} ${feature.isComingSoon ? 'opacity-60' : ''}`}>
+                 <DynamicIcon icon={feature.icon} className={`w-6 h-6 ${category.color}`} />
+              </div>
+
+              <div className="flex-1 relative z-10">
+                <h4 className={`text-lg sm:text-xl font-bold mb-2 transition-colors ${feature.isComingSoon ? 'text-muted-foreground' : `text-foreground ${category.hoverColor}`}`}>{feature.name}</h4>
+                <p className="text-sm text-muted-foreground font-light">{feature.description}</p>
+              </div>
+
+              <div className="mt-6 flex justify-end relative z-10">
+                {feature.isComingSoon
+                  ? <span className="text-xs text-muted-foreground/50 font-medium italic">In progress...</span>
+                  : <ArrowRight className={`w-5 h-5 text-muted-foreground/30 group-hover:translate-x-1 transition-all ${category.hoverColor}`} />
+                }
+              </div>
+            </>
+          );
+
+          return feature.isComingSoon ? (
+            <div key={fIndex} className={`${cardClasses} cursor-default opacity-80`}>
+              {cardContent}
             </div>
-            
-            <div className="flex-1 relative z-10">
-              <h4 className={`text-lg sm:text-xl font-bold text-foreground mb-2 transition-colors ${category.hoverColor}`}>{feature.name}</h4>
-              <p className="text-sm text-muted-foreground font-light">{feature.description}</p>
-            </div>
-            
-            <div className="mt-6 flex justify-end relative z-10">
-              <ArrowRight className={`w-5 h-5 text-muted-foreground/30 group-hover:translate-x-1 transition-all ${category.hoverColor}`} />
-            </div>
-          </Link>
-        ))}
+          ) : (
+            <Link key={fIndex} href={`/${category.slug}/${feature.slug}`} className={`${cardClasses} hover:shadow-xl hover:bg-card cursor-pointer`}>
+              {cardContent}
+            </Link>
+          );
+        })}
       </div>
       <div className="w-full mt-2">
          <AdPlaceholder />
