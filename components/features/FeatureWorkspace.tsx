@@ -19,6 +19,9 @@ const CompressorUI = dynamic(() => import("./CompressorUI").then(mod => mod.Comp
 const ImageEditorUI = dynamic(() => import("./ImageEditor/ImageEditorUI").then(mod => mod.ImageEditorUI), { 
   loading: () => <LoadingFallback /> 
 });
+const RemoveBgUI = dynamic(() => import("./RemoveBgUI").then(mod => mod.RemoveBgUI), {
+  loading: () => <LoadingFallback />
+});
 
 export function FeatureWorkspace({ feature }: { feature: Feature }) {
   // Component Registry / Strategy Pattern
@@ -29,6 +32,8 @@ export function FeatureWorkspace({ feature }: { feature: Feature }) {
       return <CompressorUI feature={feature} />;
     case "editor":
       return <ImageEditorUI feature={feature} />;
+    case "remove-bg":
+      return <RemoveBgUI feature={feature} />;
     default:
       return (
         <div className="space-y-8 animate-fade-in-up">

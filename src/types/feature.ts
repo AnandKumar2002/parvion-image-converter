@@ -7,6 +7,7 @@ export interface Feature {
   icon: string;
   highlight: boolean;
   isActive: boolean;
+  isComingSoon?: boolean; // When true, feature is shown in UI but not yet built
   order: number;
-  uiType: "converter" | "compressor" | "resizer" | "editor";
+  uiType: "converter" | "compressor" | "resizer" | "editor" | "remove-bg";
 }
