@@ -7,7 +7,6 @@ import { ThemeProvider } from "@/components/layout/ThemeProvider";
 const inter = Inter({ 
   subsets: ["latin"],
   display: 'swap',
-  preload: false
 });
 
 export const metadata: Metadata = {
