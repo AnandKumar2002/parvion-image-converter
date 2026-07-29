@@ -6,17 +6,12 @@ export const metadata: Metadata = {
 };
 
 export default function TermsPage() {
-  const lastUpdated = "July 25, 2026";
-
   return (
     <div className="w-full max-w-4xl mx-auto py-12 px-4 sm:px-6">
       <div className="mb-12 border-b border-border pb-8">
         <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-4">
           Terms and Conditions
         </h1>
-        <p className="text-muted-foreground">
-          Last updated: {lastUpdated}
-        </p>
       </div>
 
       <div className="prose prose-slate dark:prose-invert max-w-none prose-headings:font-bold prose-headings:tracking-tight prose-a:text-cyan-500 hover:prose-a:text-cyan-400">
