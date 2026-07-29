@@ -1,11 +1,21 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
+import { features } from "@/src/data/features";
 
 export function AdPlaceholder({ className = "", adSlot = "" }: { className?: string, adSlot?: string }) {
   const publisherId = process.env.NEXT_PUBLIC_ADSENSE_PUB_ID;
   const containerRef = useRef<HTMLDivElement>(null);
   const [isReady, setIsReady] = useState(false);
+  const pathname = usePathname();
+
+  // Check if current page is a coming-soon or under-construction route
+  const isComingSoonPage = pathname ? features.some(f => f.isComingSoon && pathname.endsWith(`/${f.slug}`)) : false;
+
+  if (isComingSoonPage) {
+    return null;
+  }
 
   useEffect(() => {
     if (!publisherId || typeof window === "undefined") return;
@@ -47,7 +57,7 @@ export function AdPlaceholder({ className = "", adSlot = "" }: { className?: str
 
   if (!publisherId) {
     return (
-      <div className={`w-full h-24 sm:h-32 bg-primary rounded-lg opacity-80 flex items-center justify-center ${className}`}>
+      <div className={`w-full h-full bg-primary rounded-lg opacity-80 flex items-center justify-center ${className}`}>
         <span className="text-xs text-primary-foreground uppercase font-bold tracking-widest">
           Advertisement
         </span>
@@ -56,11 +66,11 @@ export function AdPlaceholder({ className = "", adSlot = "" }: { className?: str
   }
 
   return (
-    <div ref={containerRef} className={`w-full overflow-hidden flex justify-center ${className}`}>
+    <div ref={containerRef} className={`w-full h-full overflow-hidden flex justify-center items-center ${className}`}>
       {isReady && (
         <ins
           className="adsbygoogle"
-          style={{ display: "block", width: "100%" }}
+          style={{ display: "block", width: "100%", height: "100%" }}
           data-ad-client={publisherId}
           data-ad-slot={adSlot || "auto"}
           data-ad-format="auto"
