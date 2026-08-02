@@ -4,28 +4,46 @@ import { VALIDATION_RULES } from '@/src/constants/validation';
 
 interface UploadBoxProps {
   onFileSelect: (file: File) => void;
+  onFilesSelect?: (files: File[]) => void;
+  multiple?: boolean;
   isDragging: boolean;
   setIsDragging: (isDragging: boolean) => void;
   title?: string;
   subtitle?: string;
 }
 
-export function UploadBox({ onFileSelect, isDragging, setIsDragging, title = "Drop image here", subtitle = "or click to browse from your device" }: UploadBoxProps) {
+export function UploadBox({ 
+  onFileSelect, 
+  onFilesSelect, 
+  multiple = false, 
+  isDragging, 
+  setIsDragging, 
+  title = "Drop image here", 
+  subtitle = "or click to browse from your device" 
+}: UploadBoxProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const handlePaste = (e: ClipboardEvent) => {
       if (e.clipboardData?.files && e.clipboardData.files.length > 0) {
-        const file = e.clipboardData.files[0];
-        if (file.type.startsWith('image/')) {
-          e.preventDefault();
-          onFileSelect(file);
+        if (multiple && onFilesSelect) {
+          const files = Array.from(e.clipboardData.files).filter(f => f.type.startsWith('image/'));
+          if (files.length > 0) {
+            e.preventDefault();
+            onFilesSelect(files);
+          }
+        } else {
+          const file = e.clipboardData.files[0];
+          if (file.type.startsWith('image/')) {
+            e.preventDefault();
+            onFileSelect(file);
+          }
         }
       }
     };
     window.addEventListener('paste', handlePaste);
     return () => window.removeEventListener('paste', handlePaste);
-  }, [onFileSelect]);
+  }, [onFileSelect, onFilesSelect, multiple]);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -42,13 +60,21 @@ export function UploadBox({ onFileSelect, isDragging, setIsDragging, title = "Dr
     setIsDragging(false);
     
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      onFileSelect(e.dataTransfer.files[0]);
+      if (multiple && onFilesSelect) {
+        onFilesSelect(Array.from(e.dataTransfer.files));
+      } else {
+        onFileSelect(e.dataTransfer.files[0]);
+      }
     }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      onFileSelect(e.target.files[0]);
+      if (multiple && onFilesSelect) {
+        onFilesSelect(Array.from(e.target.files));
+      } else {
+        onFileSelect(e.target.files[0]);
+      }
     }
   };
 
@@ -65,6 +91,7 @@ export function UploadBox({ onFileSelect, isDragging, setIsDragging, title = "Dr
         className="hidden" 
         ref={inputRef} 
         onChange={handleChange}
+        multiple={multiple}
         accept={VALIDATION_RULES.ALLOWED_MIME_TYPES.join(',')}
       />
       
