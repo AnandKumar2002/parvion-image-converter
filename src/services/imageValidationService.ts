@@ -20,7 +20,7 @@ export class ImageValidationService {
 
     // Fallback for Windows/browsers that don't recognize some MIME types and return an empty string
     const ext = file.name.split('.').pop()?.toLowerCase();
-    const isAllowedExtension = ext && ['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp', 'tiff', 'ico', 'svg'].includes(ext);
+    const isAllowedExtension = ext && ['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp', 'tiff', 'ico', 'svg', 'heic', 'heif'].includes(ext);
 
     if (!VALIDATION_RULES.ALLOWED_MIME_TYPES.includes(file.type as any) && !isAllowedExtension) {
       return { 

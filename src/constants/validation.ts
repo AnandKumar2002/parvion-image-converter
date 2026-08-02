@@ -10,6 +10,8 @@ export const VALIDATION_RULES = {
     'image/tiff',
     'image/x-icon',
     'image/avif',
-    'image/svg+xml'
+    'image/svg+xml',
+    'image/heic',
+    'image/heif'
   ]
 };

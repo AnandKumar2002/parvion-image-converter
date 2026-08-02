@@ -8,7 +8,9 @@ export type ImageMimeType =
   | 'image/x-icon' 
   | 'image/avif' 
   | 'image/svg+xml'
-  | 'video/mp4';
+  | 'video/mp4'
+  | 'image/heic'
+  | 'image/heif';
 
 export type ImageExtension = 
   | 'png' 
@@ -21,7 +23,9 @@ export type ImageExtension =
   | 'ico' 
   | 'avif' 
   | 'svg'
-  | 'mp4';
+  | 'mp4'
+  | 'heic'
+  | 'heif';
 
 export interface ImageFile {
   file: File;
