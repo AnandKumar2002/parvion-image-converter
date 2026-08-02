@@ -25,7 +25,8 @@ import {
   Redo2,
   ImagePlus,
   X,
-  ChevronDown
+  ChevronDown,
+  Upload
 } from "lucide-react";
 import ReactCrop, { type Crop as CropType } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
@@ -55,6 +56,7 @@ export function ImageEditorUI({ feature }: { feature: Feature }) {
 
   const [patternUrl, setPatternUrl] = useState<string | null>(null);
   const [patternSize, setPatternSize] = useState<number>(100);
+  const [exportQuality, setExportQuality] = useState(90);
 
   type MeasurementUnit = 'px' | '%' | 'in' | 'cm';
   const [unit, setUnit] = useState<MeasurementUnit>('px');
@@ -84,6 +86,28 @@ export function ImageEditorUI({ feature }: { feature: Feature }) {
 
   const [isProcessing, setIsProcessing] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
+  const [imgSize, setImgSize] = useState<{ width: number; height: number } | null>(null);
+
+  const updateImageSize = () => {
+    if (imgRef.current) {
+      setImgSize({
+        width: imgRef.current.clientWidth,
+        height: imgRef.current.clientHeight,
+      });
+    }
+  };
+
+  useEffect(() => {
+    updateImageSize();
+    window.addEventListener('resize', updateImageSize);
+    return () => window.removeEventListener('resize', updateImageSize);
+  }, [imageFile]);
+
+  useEffect(() => {
+    const timer = setTimeout(updateImageSize, 120);
+    return () => clearTimeout(timer);
+  }, [activeTool, rotation, scaleX, scaleY, resizeWidth, resizeHeight]);
+
 
   // Set default tool based on feature
   useEffect(() => {
@@ -416,7 +440,7 @@ export function ImageEditorUI({ feature }: { feature: Feature }) {
         const pngBlob = await CanvasService.exportCanvasToBlob(canvas, 'image/png', 1.0);
         blob = await VideoConverterService.convertImageToGif(pngBlob);
       } else {
-        blob = await CanvasService.exportCanvasToBlob(canvas, mimeType, 0.9);
+        blob = await CanvasService.exportCanvasToBlob(canvas, mimeType, exportQuality / 100);
       }
 
       if (!blob) throw new Error('Canvas is empty');
@@ -459,7 +483,7 @@ export function ImageEditorUI({ feature }: { feature: Feature }) {
   }
 
   return (
-    <div className="w-full flex flex-col-reverse lg:flex-row gap-6 animate-fade-in-up lg:h-[800px] lg:max-h-[80vh]">
+    <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6 items-stretch animate-fade-in-up">
       
       <EditorSidebar 
         featureName={feature.name}
@@ -784,167 +808,199 @@ export function ImageEditorUI({ feature }: { feature: Feature }) {
           </>
         }
         exportButton={
-          <div className="flex items-stretch gap-2">
-            <div className="relative w-[35%] min-w-[90px]">
-              <select 
-                value={exportFormat}
-                onChange={(e) => setExportFormat(e.target.value as any)}
-                className="appearance-none w-full h-full bg-background/50 border border-border rounded-xl px-3 py-3 pr-7 text-xs font-bold text-foreground focus:outline-none focus:border-primary cursor-pointer hover:bg-background transition-colors"
+          <div className="flex flex-col gap-4 w-full">
+            {/* Export Quality Configuration */}
+            {(exportFormat === "image/jpeg" || exportFormat === "image/webp" || (exportFormat === "original" && imageFile && (imageFile.mimeType === "image/jpeg" || imageFile.mimeType === "image/webp"))) && (
+              <div className="space-y-1 animate-fade-in-up w-full text-left">
+                <div className="flex justify-between items-center text-xs font-semibold text-muted-foreground">
+                  <span>Export Quality</span>
+                  <span>{exportQuality}%</span>
+                </div>
+                <input
+                  type="range"
+                  min={10}
+                  max={100}
+                  value={exportQuality}
+                  onChange={(e) => setExportQuality(parseInt(e.target.value))}
+                  className="w-full accent-primary h-1.5 cursor-pointer bg-secondary rounded-lg appearance-none"
+                />
+              </div>
+            )}
+            
+            <div className="flex items-stretch gap-2 w-full">
+              <div className="relative">
+                <select 
+                  value={exportFormat}
+                  onChange={(e) => setExportFormat(e.target.value as any)}
+                  className="appearance-none pl-4 pr-9 py-3.5 border border-border bg-background text-foreground hover:border-primary font-bold rounded-xl outline-none cursor-pointer text-sm transition-all uppercase"
+                >
+                  <option value="original">Original</option>
+                  <option value="image/jpeg">JPG</option>
+                  <option value="image/png">PNG</option>
+                  <option value="image/webp">WEBP</option>
+                  <option value="image/gif">GIF</option>
+                  <option value="image/svg+xml">SVG</option>
+                </select>
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+                </div>
+              </div>
+              <button 
+                onClick={handleExport}
+                disabled={isProcessing}
+                className="flex-grow py-3 bg-primary text-primary-foreground font-black rounded-xl shadow-sm hover:shadow-primary/30 hover:-translate-y-0.5 transition-all duration-300 text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:hover:translate-y-0 cursor-pointer"
               >
-                <option value="original">Original</option>
-                <option value="image/jpeg">JPG</option>
-                <option value="image/png">PNG</option>
-                <option value="image/webp">WEBP</option>
-                <option value="image/gif">GIF</option>
-                <option value="image/svg+xml">SVG</option>
-              </select>
-              <ChevronDown className="w-4 h-4 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground" />
+                {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                Export Image
+              </button>
             </div>
-            <button 
-              onClick={handleExport}
-              disabled={isProcessing}
-              className="flex-1 py-3 bg-primary text-primary-foreground font-black rounded-xl shadow-sm hover:shadow-primary/30 hover:-translate-y-0.5 transition-all duration-300 text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:hover:translate-y-0"
-            >
-              {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-              Export Image
-            </button>
           </div>
         }
       />
 
-      {/* Main Canvas Area */}
-      <div className="flex-grow bg-card/40 border border-border rounded-3xl p-4 sm:p-6 backdrop-blur-xl shadow-sm flex flex-col relative h-[60vh] min-h-[400px] lg:h-auto lg:min-h-0">
-        
-        {/* Toolbar Header */}
-        <div className="w-full flex justify-between items-center mb-4 z-10 shrink-0 min-h-[40px]">
-          <div className="flex gap-2">
-            <button 
-              onClick={() => document.getElementById('replace-image-input')?.click()}
-              className="px-3 py-1.5 bg-primary border border-transparent rounded-lg hover:bg-primary/90 transition-colors text-primary-foreground flex items-center gap-2 text-xs font-bold shadow-sm relative z-50"
-              title="Upload a new image"
-            >
-              <ImagePlus className="w-4 h-4" /> Replace
-            </button>
-            <input 
-              id="replace-image-input" 
-              type="file" 
-              accept="image/*" 
-              className="hidden" 
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  const currentTool = activeTool;
-                  processFile(file);
-                  resetEditor();
-                  setActiveTool(currentTool);
-                }
-                e.target.value = ''; // reset input
-              }} 
-            />
-          </div>
-          
-          {['crop', 'rotate', 'flip', 'resize'].includes(activeTool) && (
-            <div className="flex gap-2">
+      {/* RIGHT COLUMN: Live Canvas Preview */}
+      <div className="lg:col-span-7 flex flex-col lg:h-[600px] w-full">
+        {/* Right card: header toolbar + preview as single rounded container */}
+        <div className="flex-1 flex flex-col bg-card border border-border/80 rounded-3xl overflow-hidden shadow-md">
+          {/* Header toolbar */}
+          <div className="flex items-center justify-between px-5 py-3 border-b border-border/40 bg-card/40 backdrop-blur-xl flex-shrink-0">
+            <div className="flex items-center gap-2">
               <button 
-                onClick={undo}
-                disabled={past.length === 0}
-                className="p-2 bg-background border border-border rounded-lg hover:bg-muted disabled:opacity-50 transition-colors"
-                title="Undo"
+                onClick={() => document.getElementById('replace-image-input')?.click()}
+                className="px-4 py-2 text-xs font-bold rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
+                title="Upload a new image"
               >
-                <Undo2 className="w-4 h-4" />
+                <Upload className="w-3.5 h-3.5" /> Replace
               </button>
-              <button 
-                onClick={redo}
-                disabled={future.length === 0}
-                className="p-2 bg-background border border-border rounded-lg hover:bg-muted disabled:opacity-50 transition-colors"
-                title="Redo"
-              >
-                <Redo2 className="w-4 h-4" />
-              </button>
-            </div>
-          )}
-        </div>
-
-        <div className="flex-grow flex items-center justify-center relative overflow-hidden min-h-0">
-          {activeTool === 'crop' ? (
-          <ReactCrop
-            crop={crop}
-            aspect={cropAspect}
-            onChange={(_, percentCrop) => setCrop(percentCrop)}
-            onDragStart={() => commitHistory()}
-            className="max-h-full max-w-full flex items-center justify-center shadow-2xl rounded-lg"
-          >
-            <img
-              ref={imgRef}
-              alt="Crop preview"
-              src={imageFile.previewUrl}
-              className="max-h-full max-w-full object-contain"
-              style={{ maxHeight: '100%', transform: `scale(${scaleX}, ${scaleY}) rotate(${rotation}deg)` }}
-            />
-          </ReactCrop>
-        ) : (
-          <div className="relative h-full w-full max-h-full max-w-full flex items-center justify-center">
-            <div className="relative h-full w-full flex items-center justify-center">
-              <img
-                ref={imgRef}
-                alt="Preview"
-                src={imageFile.previewUrl}
-                className={`max-h-full max-w-full shadow-2xl rounded-lg transition-all duration-300 ${activeTool === 'resize' ? '' : 'object-contain'}`}
-                style={{ 
-                  transform: `scale(${scaleX}, ${scaleY}) rotate(${rotation}deg)`,
-                  ...(activeTool === 'resize' && resizeWidth && resizeHeight ? {
-                    aspectRatio: `${resizeWidth} / ${resizeHeight}`,
-                    objectFit: 'fill',
-                  } : {})
-                }}
+              <input 
+                id="replace-image-input" 
+                type="file" 
+                accept="image/*" 
+                className="hidden" 
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    const currentTool = activeTool;
+                    processFile(file);
+                    resetEditor();
+                    setActiveTool(currentTool);
+                  }
+                  e.target.value = ''; // reset input
+                }} 
               />
-              {/* Live Preview Watermark Overlay */}
-              {activeTool === 'watermark' && (
-                <div 
-                  className="absolute inset-0 pointer-events-none flex"
-                  style={{
-                    alignItems: watermarkRepeated ? 'center' : watermarkPosition.includes('top') ? 'flex-start' : watermarkPosition.includes('bottom') ? 'flex-end' : 'center',
-                    justifyContent: watermarkRepeated ? 'center' : watermarkPosition.includes('left') ? 'flex-start' : watermarkPosition.includes('right') ? 'flex-end' : 'center',
-                    padding: watermarkRepeated ? 0 : `${watermarkPadding}%`,
-                  }}
+            </div>
+            
+            {['crop', 'rotate', 'flip', 'resize'].includes(activeTool) && (
+              <div className="flex items-center gap-1">
+                <button 
+                  onClick={undo}
+                  disabled={past.length === 0}
+                  className="p-2 bg-background border border-border/80 text-foreground rounded-xl hover:bg-muted/50 disabled:opacity-40 cursor-pointer transition-all duration-200"
+                  title="Undo"
                 >
-                  {watermarkRepeated && patternUrl ? (
-                    <div 
-                      className="absolute inset-[-50%] bg-repeat pointer-events-none" 
+                  <Undo2 className="w-4 h-4" />
+                </button>
+                <button 
+                  onClick={redo}
+                  disabled={future.length === 0}
+                  className="p-2 bg-background border border-border/80 text-foreground rounded-xl hover:bg-muted/50 disabled:opacity-40 cursor-pointer transition-all duration-200"
+                  title="Redo"
+                >
+                  <Redo2 className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Preview Box */}
+          <div className="flex-1 flex items-center justify-center p-6 relative overflow-hidden select-none">
+            <div className="absolute inset-0 bg-checkerboard opacity-10 pointer-events-none z-0" />
+            <div className="relative w-full h-full flex items-center justify-center z-10">
+              {activeTool === 'crop' ? (
+                <ReactCrop
+                  crop={crop}
+                  aspect={cropAspect}
+                  onChange={(_, percentCrop) => setCrop(percentCrop)}
+                  onDragStart={() => commitHistory()}
+                  className="max-h-full max-w-full flex items-center justify-center shadow-2xl rounded-lg"
+                >
+                  <img
+                    ref={imgRef}
+                    alt="Crop preview"
+                    src={imageFile.previewUrl}
+                    className="max-h-full max-w-full object-contain"
+                    style={{ maxHeight: '100%', transform: `scale(${scaleX}, ${scaleY}) rotate(${rotation}deg)` }}
+                  />
+                </ReactCrop>
+              ) : (
+                <div className="relative h-full w-full max-h-full max-w-full flex items-center justify-center">
+                  <div className="relative h-full w-full flex items-center justify-center">
+                    <img
+                      ref={imgRef}
+                      alt="Preview"
+                      src={imageFile.previewUrl}
+                      onLoad={updateImageSize}
+                      className={`max-h-full max-w-full shadow-2xl rounded-lg transition-all duration-300 ${activeTool === 'resize' ? '' : 'object-contain'}`}
                       style={{ 
-                        backgroundImage: `url(${patternUrl})`,
-                        backgroundSize: `${patternSize * 0.75}%`, // Scaled for the rotated container
-                        transform: 'rotate(-30deg)',
+                        transform: `scale(${scaleX}, ${scaleY}) rotate(${rotation}deg)`,
+                        ...(activeTool === 'resize' && resizeWidth && resizeHeight ? {
+                          aspectRatio: `${resizeWidth} / ${resizeHeight}`,
+                          objectFit: 'fill',
+                        } : {})
                       }}
                     />
-                  ) : watermarkType === 'text' && watermarkText && !watermarkRepeated ? (
-                    <span 
-                      className="font-bold leading-none whitespace-nowrap"
-                      style={{
-                        color: watermarkColor,
-                        fontSize: `${watermarkSize}cqw`, 
-                        opacity: watermarkOpacity / 100,
-                        textShadow: '0px 0px 8px rgba(0,0,0,0.5)',
-                      }}
-                    >
-                      {watermarkText}
-                    </span>
-                  ) : watermarkType === 'image' && watermarkImage ? (
-                    <img 
-                      src={watermarkImage}
-                      alt="Watermark Overlay"
-                      style={{
-                        width: `${watermarkSize}%`,
-                        height: 'auto',
-                        opacity: watermarkOpacity / 100,
-                      }}
-                    />
-                  ) : null}
+                    {/* Live Preview Watermark Overlay */}
+                    {activeTool === 'watermark' && (
+                      <div 
+                        className="absolute pointer-events-none flex"
+                        style={{
+                          width: imgSize ? `${imgSize.width}px` : '100%',
+                          height: imgSize ? `${imgSize.height}px` : '100%',
+                          containerType: 'inline-size',
+                          alignItems: watermarkRepeated ? 'center' : watermarkPosition.includes('top') ? 'flex-start' : watermarkPosition.includes('bottom') ? 'flex-end' : 'center',
+                          justifyContent: watermarkRepeated ? 'center' : watermarkPosition.includes('left') ? 'flex-start' : watermarkPosition.includes('right') ? 'flex-end' : 'center',
+                          padding: watermarkRepeated ? 0 : `${watermarkPadding}%`,
+                        }}
+                      >
+                        {watermarkRepeated && patternUrl ? (
+                          <div 
+                            className="absolute inset-[-50%] bg-repeat pointer-events-none" 
+                            style={{ 
+                              backgroundImage: `url(${patternUrl})`,
+                              backgroundSize: `${patternSize * 0.75}%`, // Scaled for the rotated container
+                              transform: 'rotate(-30deg)',
+                            }}
+                          />
+                        ) : watermarkType === 'text' && watermarkText && !watermarkRepeated ? (
+                          <span 
+                            className="font-bold leading-none whitespace-nowrap"
+                            style={{
+                              color: watermarkColor,
+                              fontSize: `${watermarkSize}cqw`, 
+                              opacity: watermarkOpacity / 100,
+                              textShadow: '0px 0px 8px rgba(0,0,0,0.5)',
+                            }}
+                          >
+                            {watermarkText}
+                          </span>
+                        ) : watermarkType === 'image' && watermarkImage ? (
+                          <img 
+                            src={watermarkImage}
+                            alt="Watermark Overlay"
+                            style={{
+                              width: `${watermarkSize}%`,
+                              height: 'auto',
+                              opacity: watermarkOpacity / 100,
+                            }}
+                          />
+                        ) : null}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
           </div>
-        )}
         </div>
       </div>
 

@@ -123,5 +123,61 @@ export const toolContents: Record<string, ToolGuide> = {
       }
     ],
     privacyNotes: "All cropping, resizing, and watermark compositing are rendered locally on your GPU using canvas buffers. Your photos remain fully private."
+  },
+  "image-border": {
+    title: "Image Border & Frame Studio",
+    steps: [
+      "Select or drag your image onto the upload canvas zone.",
+      "Choose your layout style: 'Expand Canvas' to add borders on the outside, or 'Inset Overlay' to render them inside the original dimensions.",
+      "Adjust the outer border thickness, pick custom border colors, and select corner rounded radius values.",
+      "Click the Frames tab to apply polaroid frames (and write custom handwritten captions!), wooden bezels, or vintage film roll styles.",
+      "Export and download your finalized bordered image as a high-quality PNG."
+    ],
+    features: [
+      "Expandable & Inset Modes: Position borders surrounding the image or as inset design lines.",
+      "Polaroid Captions: Renders a classic polaroid camera format with handwritten caption texts, fonts, and colors.",
+      "Canvas Colors & Gradients: Decorate empty backgrounds with solid colors or customized rotating linear gradients.",
+      "Artistic Frame Bezels: Apply wooden frames, borders, and vertical sprocket film strips.",
+      "Undo & Redo History: Full timeline history tracking lets you revert edits in real-time."
+    ],
+    faqs: [
+      {
+        question: "Will adding a border reduce my image's quality?",
+        answer: "No. The borders are rendered using vectors and direct canvas pixel mapping, maintaining the original pixel quality during exports."
+      },
+      {
+        question: "How does the Polaroid text rendering work?",
+        answer: "When choosing Polaroid mode, the canvas dimensions are expanded to create the iconic Polaroid margin layout, drawing your custom caption centered on the bottom white margin using beautiful handwriting fonts."
+      }
+    ],
+    privacyNotes: "Your images are processed 100% locally in your browser session. No files are uploaded to any server, ensuring total privacy."
+  },
+  "image-filters": {
+    title: "Image Filters & Adjustments Studio",
+    steps: [
+      "Select or drag your photo onto the upload box.",
+      "Browse through the Presets Gallery to apply curated visual styles (Chrome, Mono, Vintage, Noir, Negative, etc.) with a single click.",
+      "Switch to the Adjustments tab to manually fine-tune parameters like Brightness, Contrast, Saturation, Hue Shift, and Blur.",
+      "Toggle the 'Compare Split' button to display a slider allowing you to drag and compare the original vs. filtered image.",
+      "Click 'Export Image' to download the filtered result as a PNG."
+    ],
+    features: [
+      "One-Click Presets: A gallery of color presets ranging from cinematic black and white to retro and color inversion.",
+      "Manual Fine-Tuning: Adjustable sliders for absolute pixel grading control.",
+      "Comparative Split Slider: Drag a visual dividing line to compare 'Before' vs 'After' edits at 60 FPS.",
+      "Non-Destructive Editing: The layout uses standard non-destructive canvas filters, keeping original sources in memory.",
+      "Undo/Redo Tracking: Standard history controls to step through adjustments easily."
+    ],
+    faqs: [
+      {
+        question: "How does the Compare Split view work?",
+        answer: "The split view overlaps the original and filtered images. As you drag the central slider, it dynamically changes the clip width of the top layer, letting you see the direct filter contrast change on the exact same pixels."
+      },
+      {
+        question: "Can I combine presets with manual adjustments?",
+        answer: "Adjusting manual sliders will transition your active preset configuration to custom. You can start with a preset to get a baseline filter, and then switch to adjustments to fine-tune it!"
+      }
+    ],
+    privacyNotes: "All visual calculations and photo filters run 100% inside your browser session. Photos never touch remote servers."
   }
 };

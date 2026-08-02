@@ -23,10 +23,10 @@ export const features: Feature[] = [
   { id: "feat_rotate-images", categorySlug: "tools", name: "Rotate images", slug: "rotate-images", description: "Turn your image left or right.", icon: "lucide:rotate-cw", highlight: false, isActive: true, order: 6, uiType: "editor" },
   { id: "feat_flip-images", categorySlug: "tools", name: "Flip images", slug: "flip-images", description: "Flip your image like a mirror.", icon: "lucide:flip-horizontal", highlight: false, isActive: true, order: 7, uiType: "editor" },
   { id: "feat_size-checker", categorySlug: "tools", name: "Image size checker", slug: "size-checker", description: "See exactly how big your file is.", icon: "lucide:info", highlight: false, isActive: true, order: 8, uiType: "editor" },
+  { id: "feat_image-border", categorySlug: "tools", name: "Image Border & Frame", slug: "image-border", description: "Add stylish borders and frames around your images.", icon: "lucide:frame", highlight: true, isActive: true, order: 9, uiType: "border" },
+  { id: "feat_image-filters", categorySlug: "tools", name: "Image Filters", slug: "image-filters", description: "Apply beautiful filters like grayscale, sepia, and vintage to your photos.", icon: "lucide:sparkles", highlight: true, isActive: true, order: 10, uiType: "filters" },
 
   // --- IN PROGRESS: Unfinished Features (isActive: false) ---
-  { id: "feat_image-border", categorySlug: "tools", name: "Image Border & Frame", slug: "image-border", description: "Add stylish borders and frames around your images.", icon: "lucide:frame", highlight: false, isActive: false, isComingSoon: true, order: 9, uiType: "editor" },
-  { id: "feat_image-filters", categorySlug: "tools", name: "Image Filters", slug: "image-filters", description: "Apply beautiful filters like grayscale, sepia, and vintage to your photos.", icon: "lucide:sparkles", highlight: false, isActive: false, isComingSoon: true, order: 10, uiType: "editor" },
   { id: "feat_image-to-pdf", categorySlug: "convert", name: "Image to PDF", slug: "image-to-pdf", description: "Convert any image into a PDF document instantly.", icon: "lucide:file-text", highlight: false, isActive: false, isComingSoon: true, order: 11, uiType: "converter" },
   { id: "feat_add-text", categorySlug: "tools", name: "Add Text to Image", slug: "add-text", description: "Add custom text, captions, and labels on top of your images.", icon: "lucide:type", highlight: false, isActive: false, isComingSoon: true, order: 12, uiType: "editor" },
 ];

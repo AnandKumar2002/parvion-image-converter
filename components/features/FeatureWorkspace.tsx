@@ -22,6 +22,12 @@ const ImageEditorUI = dynamic(() => import("./ImageEditor/ImageEditorUI").then(m
 const RemoveBgUI = dynamic(() => import("./RemoveBgUI").then(mod => mod.RemoveBgUI), {
   loading: () => <LoadingFallback />
 });
+const ImageBorderUI = dynamic(() => import("./ImageBorderUI").then(mod => mod.ImageBorderUI), {
+  loading: () => <LoadingFallback />
+});
+const ImageFiltersUI = dynamic(() => import("./ImageFiltersUI").then(mod => mod.ImageFiltersUI), {
+  loading: () => <LoadingFallback />
+});
 
 export function FeatureWorkspace({ feature }: { feature: Feature }) {
   // Component Registry / Strategy Pattern
@@ -34,6 +40,10 @@ export function FeatureWorkspace({ feature }: { feature: Feature }) {
       return <ImageEditorUI feature={feature} />;
     case "remove-bg":
       return <RemoveBgUI feature={feature} />;
+    case "border":
+      return <ImageBorderUI feature={feature} />;
+    case "filters":
+      return <ImageFiltersUI feature={feature} />;
     default:
       return (
         <div className="space-y-8 animate-fade-in-up">
