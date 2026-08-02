@@ -1,4 +1,4 @@
-import { Image as ImageIcon, X, ImagePlus } from 'lucide-react';
+import { Image as ImageIcon, X, Upload } from 'lucide-react';
 import { ImageFile } from '@/src/types/image.types';
 import { formatBytes } from '@/src/utils/fileUtils';
 import { FORMAT_DISPLAY_NAMES } from '@/src/constants/imageFormats';
@@ -21,7 +21,7 @@ export function ImagePreview({ imageFile, onClear, onFileSelect }: ImagePreviewP
               className="px-3 py-1.5 bg-primary border border-transparent rounded-lg hover:bg-primary/90 transition-colors text-primary-foreground flex items-center gap-2 text-xs font-bold shadow-sm cursor-pointer relative z-50"
               title="Replace image"
             >
-              <ImagePlus className="w-4 h-4" /> Replace
+              <Upload className="w-4 h-4" /> Replace
             </button>
             <input 
               id="preview-replace-input" 
