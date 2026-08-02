@@ -151,7 +151,7 @@ export function UniversalConverter({ featureSlug }: { featureSlug?: string }) {
                 <>
                   <h4 className="font-bold text-foreground text-lg">Ready to convert</h4>
                   <p className="text-muted-foreground text-sm">
-                    {FORMAT_DISPLAY_NAMES[imageFile.mimeType]} → {targetFormat ? FORMAT_DISPLAY_NAMES[targetFormat] : '?'}
+                    {FORMAT_DISPLAY_NAMES[imageFile.mimeType] || imageFile.extension.toUpperCase()} → {targetFormat ? FORMAT_DISPLAY_NAMES[targetFormat] : '?'}
                   </p>
                 </>
               )}

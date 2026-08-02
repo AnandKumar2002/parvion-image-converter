@@ -24,7 +24,15 @@ export function OutputSelector({ inputMimeType, selectedOutputFormat, onSelectFo
         {availableFormats.map((format) => {
           const isSelected = selectedOutputFormat === format;
           const isMp4 = format === 'video/mp4';
-          const isDisabled = isMp4 && !isGif;
+          const isHeic = format === 'image/heic';
+          const isDisabled = (isMp4 && !isGif) || isHeic;
+
+          let tooltipText = '';
+          if (isMp4 && !isGif) {
+            tooltipText = 'Only GIF → MP4 is supported';
+          } else if (isHeic) {
+            tooltipText = 'HEIC is only supported as an input format';
+          }
 
           return (
             <div key={format} className="relative group/btn">
@@ -44,7 +52,7 @@ export function OutputSelector({ inputMimeType, selectedOutputFormat, onSelectFo
               </button>
               {isDisabled && (
                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-36 text-center bg-popover text-popover-foreground text-xs font-medium px-2 py-1.5 rounded-lg shadow-lg border border-border opacity-0 group-hover/btn:opacity-100 transition-opacity pointer-events-none z-10">
-                  Only GIF → MP4 is supported
+                  {tooltipText}
                 </div>
               )}
             </div>
