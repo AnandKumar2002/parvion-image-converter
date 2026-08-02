@@ -9,5 +9,5 @@ export interface Feature {
   isActive: boolean;
   isComingSoon?: boolean; // When true, feature is shown in UI but not yet built
   order: number;
-  uiType: "converter" | "compressor" | "resizer" | "editor" | "remove-bg" | "border" | "filters";
+  uiType: "converter" | "compressor" | "resizer" | "editor" | "remove-bg" | "border" | "filters" | "image-to-pdf";
 }

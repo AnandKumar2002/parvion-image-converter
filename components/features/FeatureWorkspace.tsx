@@ -28,6 +28,9 @@ const ImageBorderUI = dynamic(() => import("./ImageBorderUI").then(mod => mod.Im
 const ImageFiltersUI = dynamic(() => import("./ImageFiltersUI").then(mod => mod.ImageFiltersUI), {
   loading: () => <LoadingFallback />
 });
+const ImageToPdfUI = dynamic(() => import("./ImageToPdfUI").then(mod => mod.ImageToPdfUI), {
+  loading: () => <LoadingFallback />
+});
 
 export function FeatureWorkspace({ feature }: { feature: Feature }) {
   // Component Registry / Strategy Pattern
@@ -44,6 +47,8 @@ export function FeatureWorkspace({ feature }: { feature: Feature }) {
       return <ImageBorderUI feature={feature} />;
     case "filters":
       return <ImageFiltersUI feature={feature} />;
+    case "image-to-pdf":
+      return <ImageToPdfUI feature={feature} />;
     default:
       return (
         <div className="space-y-8 animate-fade-in-up">
