@@ -66,9 +66,12 @@ export function ImageToPdfUI({ feature }: { feature: Feature }) {
             type: 'image/jpeg'
           });
           previewUrl = URL.createObjectURL(file);
-        } catch (err) {
-          console.error("HEIC conversion failed:", err);
-          return;
+        } catch (err: any) {
+          const errMsg = err?.message || (typeof err === 'string' ? err : '');
+          if (!errMsg.includes("already browser readable")) {
+            console.error("HEIC conversion failed:", err);
+            return;
+          }
         }
       }
 
@@ -149,9 +152,12 @@ export function ImageToPdfUI({ feature }: { feature: Feature }) {
             type: 'image/jpeg'
           });
           previewUrl = URL.createObjectURL(file);
-        } catch (err) {
-          console.error("HEIC conversion failed:", err);
-          continue;
+        } catch (err: any) {
+          const errMsg = err?.message || (typeof err === 'string' ? err : '');
+          if (!errMsg.includes("already browser readable")) {
+            console.error("HEIC conversion failed:", err);
+            continue;
+          }
         }
       }
 
