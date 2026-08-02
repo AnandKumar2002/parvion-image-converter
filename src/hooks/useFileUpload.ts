@@ -44,10 +44,32 @@ export function useFileUpload() {
         fileToProcess = new File([blob], file.name.replace(/\.(heic|heif)$/i, '.jpg'), {
           type: 'image/jpeg'
         });
-      } catch (err) {
-        console.error("HEIC conversion failed:", err);
-        setError("Failed to decode HEIC image. The file might be corrupted.");
-        return;
+      } catch (err: any) {
+        const errMsg = err?.message || (typeof err === 'string' ? err : '');
+        if (errMsg.includes("already browser readable")) {
+          // If the image is already browser-readable (e.g., a PNG/JPEG renamed to .heic),
+          // we can skip the conversion and use the file directly.
+          fileToProcess = file;
+        } else {
+          console.error("HEIC conversion failed:", err);
+          let errorDetails = "";
+          if (err instanceof Error) {
+            errorDetails = err.message;
+          } else if (typeof err === 'string') {
+            errorDetails = err;
+          } else {
+            try {
+              errorDetails = JSON.stringify(err);
+            } catch (e) {
+              errorDetails = String(err);
+            }
+          }
+          if (errorDetails === "{}" || !errorDetails) {
+            errorDetails = "Check console for details (possibly blocked by COEP policy or unsupported HEIC format)";
+          }
+          setError(`Failed to decode HEIC image: ${errorDetails}`);
+          return;
+        }
       }
     }
 
