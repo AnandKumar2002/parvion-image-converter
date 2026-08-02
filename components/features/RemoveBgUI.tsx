@@ -5,14 +5,17 @@ import { Feature } from "@/src/types/feature";
 import { UploadBox } from "./UniversalConverter/UploadBox";
 import { ImagePreview } from "./UniversalConverter/ImagePreview";
 import { useFileUpload } from "@/src/hooks/useFileUpload";
-import { Download, Wand2, Loader2, AlertCircle, RotateCcw, Palette, Sliders, Sparkles, Eye, Undo2, Redo2, ImagePlus } from "lucide-react";
+import { Download, Wand2, Loader2, AlertCircle, RotateCcw, Palette, Sliders, Sparkles, Eye, Undo2, Redo2, ImagePlus, Upload, Trash2 } from "lucide-react";
 
 interface EditorOptions {
-  bgType: "transparent" | "color" | "blur" | "custom" | "preset";
+  bgType: "transparent" | "color" | "blur" | "custom" | "preset" | "gradient";
   solidColor: string;
   blurAmount: number;
   customBgUrl: string | null;
   activePreset: string;
+  customGradColor1: string;
+  customGradColor2: string;
+  customGradAngle: number;
   scale: number;
   posX: number;
   posY: number;
@@ -23,6 +26,14 @@ interface EditorOptions {
   shadowColor: string;
   shadowBlur: number;
   shadowOffset: number;
+  strokeEnabled: boolean;
+  strokeColor: string;
+  strokeWidth: number;
+  effectGrayscale: number;
+  effectBrightness: number;
+  effectContrast: number;
+  effectSepia: number;
+  subjectFilterPreset: string;
 }
 
 export function RemoveBgUI({ feature }: { feature: Feature }) {
@@ -45,6 +56,9 @@ export function RemoveBgUI({ feature }: { feature: Feature }) {
     blurAmount: 10,
     customBgUrl: null,
     activePreset: "sunset",
+    customGradColor1: "#8b5cf6",
+    customGradColor2: "#ec4899",
+    customGradAngle: 135,
     scale: 1.0,
     posX: 0,
     posY: 0,
@@ -55,15 +69,28 @@ export function RemoveBgUI({ feature }: { feature: Feature }) {
     shadowColor: "#000000",
     shadowBlur: 15,
     shadowOffset: 8,
+    strokeEnabled: false,
+    strokeColor: "#ffffff",
+    strokeWidth: 8,
+    effectGrayscale: 0,
+    effectBrightness: 100,
+    effectContrast: 100,
+    effectSepia: 0,
+    subjectFilterPreset: "none",
   });
 
   const {
     bgType, solidColor, blurAmount, customBgUrl, activePreset,
+    customGradColor1, customGradColor2, customGradAngle,
     scale, posX, posY, flipH, flipV, rotateDeg, shadowEnabled, shadowColor,
-    shadowBlur, shadowOffset
+    shadowBlur, shadowOffset,
+    strokeEnabled, strokeColor, strokeWidth,
+    effectGrayscale, effectBrightness, effectContrast, effectSepia,
+    subjectFilterPreset
   } = options;
 
   const [showBgDropdown, setShowBgDropdown] = useState<boolean>(false);
+  const [expandedEffectSec, setExpandedEffectSec] = useState<"filters" | "outline" | "shadow" | "all" | null>("filters");
 
   // Undo/Redo History
   const [history, setHistory] = useState<EditorOptions[]>([]);
@@ -90,6 +117,7 @@ export function RemoveBgUI({ feature }: { feature: Feature }) {
     blur: "Portrait Blur",
     color: "Solid Color",
     preset: "Presets Gallery",
+    gradient: "Custom Gradient",
     custom: "Custom Background"
   };
 
@@ -155,6 +183,9 @@ export function RemoveBgUI({ feature }: { feature: Feature }) {
         blurAmount: 10,
         customBgUrl: null,
         activePreset: "sunset",
+        customGradColor1: "#8b5cf6",
+        customGradColor2: "#ec4899",
+        customGradAngle: 135,
         scale: 1.0,
         posX: 0,
         posY: 0,
@@ -165,6 +196,14 @@ export function RemoveBgUI({ feature }: { feature: Feature }) {
         shadowColor: "#000000",
         shadowBlur: 15,
         shadowOffset: 8,
+        strokeEnabled: false,
+        strokeColor: "#ffffff",
+        strokeWidth: 8,
+        effectGrayscale: 0,
+        effectBrightness: 100,
+        effectContrast: 100,
+        effectSepia: 0,
+        subjectFilterPreset: "none",
       };
       setOptions(initialOptions);
       setHistory([initialOptions]);
@@ -251,6 +290,22 @@ export function RemoveBgUI({ feature }: { feature: Feature }) {
       ctx.drawImage(imgCustomBgRef.current, 0, 0, width, height);
     } else if (bgType === "preset") {
       drawPresetGradient(ctx, width, height, activePreset);
+    } else if (bgType === "gradient") {
+      const angleRad = (customGradAngle * Math.PI) / 180;
+      const cx = width / 2;
+      const cy = height / 2;
+      const r = Math.sqrt(width * width + height * height) / 2;
+      
+      const x1 = cx - Math.cos(angleRad) * r;
+      const y1 = cy - Math.sin(angleRad) * r;
+      const x2 = cx + Math.cos(angleRad) * r;
+      const y2 = cy + Math.sin(angleRad) * r;
+      
+      const grad = ctx.createLinearGradient(x1, y1, x2, y2);
+      grad.addColorStop(0, customGradColor1);
+      grad.addColorStop(1, customGradColor2);
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, width, height);
     }
 
     // 2. Draw Subject with modifications
@@ -276,6 +331,50 @@ export function RemoveBgUI({ feature }: { feature: Feature }) {
       ctx.shadowOffsetY = shadowOffset;
     }
 
+    // A. Draw Outline Stroke (Sticker style outline border)
+    if (strokeEnabled && strokeWidth > 0) {
+      const strokeCanvas = document.createElement("canvas");
+      strokeCanvas.width = subW + strokeWidth * 2;
+      strokeCanvas.height = subH + strokeWidth * 2;
+      const strokeCtx = strokeCanvas.getContext("2d");
+      if (strokeCtx) {
+        strokeCtx.drawImage(fgImg, strokeWidth, strokeWidth, subW, subH);
+        strokeCtx.globalCompositeOperation = "source-in";
+        strokeCtx.fillStyle = strokeColor;
+        strokeCtx.fillRect(0, 0, strokeCanvas.width, strokeCanvas.height);
+        
+        ctx.save();
+        for (let angle = 0; angle < 360; angle += 22.5) {
+          const rad = (angle * Math.PI) / 180;
+          ctx.drawImage(
+            strokeCanvas,
+            x - strokeWidth + Math.cos(rad) * strokeWidth,
+            y - strokeWidth + Math.sin(rad) * strokeWidth
+          );
+        }
+        ctx.restore();
+      }
+    }
+
+    // B. Apply color filters
+    let filterString = `grayscale(${effectGrayscale}%) brightness(${effectBrightness}%) contrast(${effectContrast}%) sepia(${effectSepia}%)`;
+    if (subjectFilterPreset === "bw") {
+      filterString += " grayscale(100%)";
+    } else if (subjectFilterPreset === "vintage") {
+      filterString += " sepia(80%) contrast(120%)";
+    } else if (subjectFilterPreset === "cool") {
+      filterString += " hue-rotate(180deg) saturate(120%)";
+    } else if (subjectFilterPreset === "warm") {
+      filterString += " saturate(140%) sepia(20%)";
+    } else if (subjectFilterPreset === "invert") {
+      filterString += " invert(100%)";
+    } else if (subjectFilterPreset === "hue-shift") {
+      filterString += " hue-rotate(90deg)";
+    } else if (subjectFilterPreset === "blur") {
+      filterString += " blur(6px)";
+    }
+    ctx.filter = filterString;
+
     ctx.drawImage(fgImg, x, y, subW, subH);
     ctx.restore();
 
@@ -284,8 +383,11 @@ export function RemoveBgUI({ feature }: { feature: Feature }) {
 
   }, [
     drawTrigger, bgType, solidColor, blurAmount, customBgUrl, activePreset,
+    customGradColor1, customGradColor2, customGradAngle,
     scale, posX, posY, flipH, flipV, rotateDeg, shadowEnabled, shadowColor,
-    shadowBlur, shadowOffset
+    shadowBlur, shadowOffset, strokeEnabled, strokeColor, strokeWidth,
+    effectGrayscale, effectBrightness, effectContrast, effectSepia,
+    subjectFilterPreset
   ]);
 
   const drawPresetGradient = (ctx: CanvasRenderingContext2D, w: number, h: number, preset: string) => {
@@ -339,13 +441,15 @@ export function RemoveBgUI({ feature }: { feature: Feature }) {
     setProgressPercent(0);
     setProgressStep("");
     
-    // Reset configurations
     setOptions({
       bgType: "transparent",
       solidColor: "#ffffff",
       blurAmount: 10,
       customBgUrl: null,
       activePreset: "sunset",
+      customGradColor1: "#8b5cf6",
+      customGradColor2: "#ec4899",
+      customGradAngle: 135,
       scale: 1.0,
       posX: 0,
       posY: 0,
@@ -356,6 +460,14 @@ export function RemoveBgUI({ feature }: { feature: Feature }) {
       shadowColor: "#000000",
       shadowBlur: 15,
       shadowOffset: 8,
+      strokeEnabled: false,
+      strokeColor: "#ffffff",
+      strokeWidth: 8,
+      effectGrayscale: 0,
+      effectBrightness: 100,
+      effectContrast: 100,
+      effectSepia: 0,
+      subjectFilterPreset: "none",
     });
     setHistory([]);
     setHistoryIndex(-1);
@@ -371,11 +483,12 @@ export function RemoveBgUI({ feature }: { feature: Feature }) {
     setProgressStep("Preparing image...");
 
     // Smooth simulated progress bar tracker to avoid frozen 0% state
-    let currentProgress = 0;
+    let currentProgress = 1;
+    setProgressPercent(1);
     const progressInterval = setInterval(() => {
-      currentProgress += Math.random() * 4 + 1; // Increment by 1-5%
-      if (currentProgress >= 95) {
-        currentProgress = 95;
+      currentProgress += Math.random() * 8 + 3; // Increment by 3% - 11%
+      if (currentProgress >= 99) {
+        currentProgress = 99;
         clearInterval(progressInterval);
       }
       setProgressPercent(Math.round(currentProgress));
@@ -387,7 +500,7 @@ export function RemoveBgUI({ feature }: { feature: Feature }) {
       } else {
         setProgressStep("Analyzing and erasing background...");
       }
-    }, 150);
+    }, 60);
 
     try {
       const pngBlob = await new Promise<Blob>((resolve, reject) => {
@@ -440,11 +553,14 @@ export function RemoveBgUI({ feature }: { feature: Feature }) {
       });
 
       clearInterval(progressInterval);
-      setProgressPercent(100);
+      setProgressPercent(99);
       setProgressStep("Generating Transparent Preview...");
-
-      // Small delay so user visually sees 100% completion
-      await new Promise((resolve) => setTimeout(resolve, 350));
+      
+      // Briefly show 99% then transition to 100% completion
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      setProgressPercent(100);
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      
       setTransparentBlob(processedBlob);
     } catch (e: any) {
       clearInterval(progressInterval);
@@ -497,6 +613,9 @@ export function RemoveBgUI({ feature }: { feature: Feature }) {
       blurAmount: 10,
       customBgUrl: null,
       activePreset: "sunset",
+      customGradColor1: "#8b5cf6",
+      customGradColor2: "#ec4899",
+      customGradAngle: 135,
       scale: 1.0,
       posX: 0,
       posY: 0,
@@ -507,6 +626,14 @@ export function RemoveBgUI({ feature }: { feature: Feature }) {
       shadowColor: "#000000",
       shadowBlur: 15,
       shadowOffset: 8,
+      strokeEnabled: false,
+      strokeColor: "#ffffff",
+      strokeWidth: 8,
+      effectGrayscale: 0,
+      effectBrightness: 100,
+      effectContrast: 100,
+      effectSepia: 0,
+      subjectFilterPreset: "none",
     });
     setHistory([]);
     setHistoryIndex(-1);
@@ -608,10 +735,23 @@ export function RemoveBgUI({ feature }: { feature: Feature }) {
             <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6 items-stretch">
               
               {/* LEFT COLUMN: Controls & Adjustments */}
-              <div className="lg:col-span-5 flex flex-col bg-card border border-border/80 rounded-3xl overflow-hidden lg:h-[540px] shadow-md">
+              <div className={`lg:col-span-5 flex flex-col bg-card border border-border/80 rounded-3xl ${showBgDropdown ? 'overflow-visible z-30' : 'overflow-hidden'} lg:overflow-hidden lg:h-[600px] shadow-md`}>
                 
                 {/* Header (Tab selector) with padding and blur bg */}
-                <div className="p-6 pb-2 border-b border-border/40 bg-card/40 backdrop-blur-xl z-10 flex-shrink-0">
+                <div className="p-6 pb-2 border-b border-border/40 bg-card/40 backdrop-blur-xl z-10 flex-shrink-0 flex flex-col gap-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-bold text-foreground">
+                      {feature.name}
+                    </h3>
+                    <button 
+                      onClick={handleReset}
+                      className="p-1.5 bg-destructive/10 hover:bg-destructive text-destructive hover:text-white rounded-lg transition-colors shadow-sm cursor-pointer"
+                      title="Reset & Clear Image"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                  
                   <div className="flex overflow-x-auto no-scrollbar gap-1">
                     <button
                       onClick={() => setActiveTab("background")}
@@ -638,7 +778,7 @@ export function RemoveBgUI({ feature }: { feature: Feature }) {
                 </div>
 
                 {/* Main Content scrollable panel */}
-                <div className="flex-1 overflow-y-auto no-scrollbar p-6">
+                <div className={`flex-1 ${showBgDropdown ? 'overflow-visible relative z-30' : 'overflow-y-auto'} no-scrollbar p-6`}>
                   
                   {/* Tab 1: Background Settings */}
                   {activeTab === "background" && (
@@ -659,7 +799,7 @@ export function RemoveBgUI({ feature }: { feature: Feature }) {
                           {showBgDropdown && (
                             <>
                               <div className="fixed inset-0 z-10" onClick={() => setShowBgDropdown(false)} />
-                              <div className="absolute left-0 right-0 mt-1.5 z-20 bg-card border border-border/80 rounded-2xl shadow-xl overflow-hidden py-1 divide-y divide-border/20 animate-fade-in-up">
+                              <div className="absolute left-0 right-0 mt-1.5 z-20 bg-card border border-border/80 rounded-2xl shadow-xl overflow-y-auto max-h-52 py-1 divide-y divide-border/20 animate-fade-in-up no-scrollbar">
                                 {Object.entries(bgTypeLabels).map(([key, label]) => (
                                   <button
                                     key={key}
@@ -742,6 +882,56 @@ export function RemoveBgUI({ feature }: { feature: Feature }) {
                               <span className="text-[9px] font-bold text-foreground mt-1">{preset.label}</span>
                             </button>
                           ))}
+                        </div>
+                      )}
+
+                      {/* Custom Gradient Config */}
+                      {bgType === "gradient" && (
+                        <div className="space-y-4 animate-fade-in-up pt-1">
+                          <div className="flex flex-wrap items-center gap-3">
+                            {/* Color 1 Picker */}
+                            <div className="flex items-center gap-2 bg-muted/20 px-3 py-1.5 rounded-xl border border-border/30 w-fit">
+                              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Start</span>
+                              <div className="relative w-8 h-8 rounded-lg overflow-hidden border border-border/80 shadow-inner cursor-pointer">
+                                <input
+                                  type="color"
+                                  value={customGradColor1}
+                                  onChange={(e) => updateOption("customGradColor1", e.target.value)}
+                                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                                />
+                                <div className="w-full h-full border border-border/20 rounded-md" style={{ backgroundColor: customGradColor1 }} />
+                              </div>
+                              <span className="text-[11px] font-mono font-bold text-foreground">{customGradColor1.toUpperCase()}</span>
+                            </div>
+
+                            {/* Color 2 Picker */}
+                            <div className="flex items-center gap-2 bg-muted/20 px-3 py-1.5 rounded-xl border border-border/30 w-fit">
+                              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">End</span>
+                              <div className="relative w-8 h-8 rounded-lg overflow-hidden border border-border/80 shadow-inner cursor-pointer">
+                                <input
+                                  type="color"
+                                  value={customGradColor2}
+                                  onChange={(e) => updateOption("customGradColor2", e.target.value)}
+                                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                                />
+                                <div className="w-full h-full border border-border/20 rounded-md" style={{ backgroundColor: customGradColor2 }} />
+                              </div>
+                              <span className="text-[11px] font-mono font-bold text-foreground">{customGradColor2.toUpperCase()}</span>
+                            </div>
+                          </div>
+
+                          {/* Gradient Direction Slider */}
+                          <div className="flex items-center gap-4 bg-muted/20 px-4 py-3 rounded-xl border border-border/30 w-full">
+                            <span className="text-xs font-semibold text-muted-foreground whitespace-nowrap">Direction: {customGradAngle}°</span>
+                            <input
+                              type="range"
+                              min={0}
+                              max={360}
+                              value={customGradAngle}
+                              onChange={(e) => updateOption("customGradAngle", parseInt(e.target.value))}
+                              className="w-full accent-primary h-1.5 cursor-pointer bg-secondary rounded-lg appearance-none"
+                            />
+                          </div>
                         </div>
                       )}
 
@@ -839,164 +1029,360 @@ export function RemoveBgUI({ feature }: { feature: Feature }) {
                         </button>
                       </div>
                     </div>
-                  )}
-
-                  {/* Tab 3: Shadow & Glow Effects */}
+                  )}                  {/* Tab 3: Shadow & Glow Effects */}
                   {activeTab === "effects" && (
-                    <div className="flex flex-col gap-4 animate-fade-in text-left">
-                      <label className="flex items-center space-x-2 cursor-pointer bg-muted/20 p-3 rounded-xl border border-border/30 w-fit">
-                        <input
-                          type="checkbox"
-                          checked={shadowEnabled}
-                          onChange={(e) => updateOption("shadowEnabled", e.target.checked)}
-                          className="h-4 w-4 rounded border-gray-300 accent-primary cursor-pointer"
-                        />
-                        <span className="text-xs font-bold text-foreground">Enable Glow / Shadow</span>
-                      </label>
+                    <div className="flex flex-col gap-3 animate-fade-in text-left">
 
-                      {shadowEnabled && (
-                        <div className="space-y-4 animate-fade-in-up">
-                          <div className="flex items-center gap-3">
-                            <span className="text-xs font-medium text-muted-foreground">Effect Color:</span>
-                            <div className="relative w-8 h-8 rounded-lg overflow-hidden border border-border/80 shadow-inner cursor-pointer">
-                              <input
-                                type="color"
-                                value={shadowColor}
-                                onChange={(e) => updateOption("shadowColor", e.target.value)}
-                                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                              />
-                              <div className="w-full h-full border border-border/20 rounded-md" style={{ backgroundColor: shadowColor }} />
+                      {/* CARD 1: Filters & Adjustments */}
+                      <div className="bg-background/40 border border-border/40 rounded-2xl overflow-hidden transition-all duration-300">
+                        {/* Header */}
+                        <button
+                          onClick={() => setExpandedEffectSec(expandedEffectSec === "filters" ? null : "filters")}
+                          className="w-full flex items-center justify-between p-4 hover:bg-muted/10 transition-colors text-left cursor-pointer"
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                              <Sparkles className="w-4 h-4" />
                             </div>
-                            <span className="text-xs font-mono font-bold text-foreground">{shadowColor.toUpperCase()}</span>
+                            <div>
+                              <h4 className="text-xs font-bold text-foreground">Filters & Adjustments</h4>
+                              <p className="text-[9px] text-muted-foreground font-medium">Color styles and manual adjustments</p>
+                            </div>
                           </div>
+                          <svg className={`w-4 h-4 text-muted-foreground transition-transform duration-300 ${expandedEffectSec === "filters" || expandedEffectSec === "all" ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+                        </button>
 
-                          <div className="space-y-1">
-                            <span className="text-xs font-semibold text-muted-foreground">Blur Radius: {shadowBlur}px</span>
-                            <input
-                              type="range"
-                              min={2}
-                              max={50}
-                              value={shadowBlur}
-                              onChange={(e) => updateOption("shadowBlur", parseInt(e.target.value))}
-                              className="w-full accent-primary h-1.5 cursor-pointer bg-secondary rounded-lg appearance-none"
-                            />
+                        {/* Content */}
+                        {(expandedEffectSec === "filters" || expandedEffectSec === "all") && (
+                          <div className="p-4 pt-0 border-t border-border/20 bg-muted/5 space-y-4 animate-fade-in">
+                            <div className="space-y-2.5 pt-3">
+                              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Visual Styles</span>
+                              <div className="grid grid-cols-4 gap-1.5">
+                                {[
+                                  { id: "none", label: "Original", class: "bg-gradient-to-br from-indigo-500 to-pink-500" },
+                                  { id: "bw", label: "B&W", class: "bg-gradient-to-br from-indigo-500 to-pink-500 grayscale" },
+                                  { id: "vintage", label: "Vintage", class: "bg-gradient-to-br from-indigo-500 to-pink-500 sepia contrast-125" },
+                                  { id: "cool", label: "Cool Tone", class: "bg-gradient-to-br from-indigo-500 to-pink-500 hue-rotate-180 saturate-125" },
+                                  { id: "warm", label: "Warm Tone", class: "bg-gradient-to-br from-indigo-500 to-pink-500 saturate-150 sepia-25" },
+                                  { id: "invert", label: "Inverted", class: "bg-gradient-to-br from-indigo-500 to-pink-500 invert" },
+                                  { id: "hue-shift", label: "Rainbow", class: "bg-gradient-to-br from-indigo-500 to-pink-500 hue-rotate-90" },
+                                  { id: "blur", label: "Soft Blur", class: "bg-gradient-to-br from-indigo-500 to-pink-500 blur-[2px]" },
+                                ].map((f) => (
+                                  <button
+                                    key={f.id}
+                                    onClick={() => updateOption("subjectFilterPreset", f.id)}
+                                    className={`flex flex-col items-center justify-center p-1.5 rounded-xl border transition-all cursor-pointer ${subjectFilterPreset === f.id ? "border-primary bg-primary/10 shadow-sm" : "border-border/40 hover:border-foreground/30 bg-background"}`}
+                                  >
+                                    <div className={`w-7 h-7 rounded-lg overflow-hidden relative shadow-inner ${f.class}`} />
+                                    <span className="text-[8px] font-bold text-muted-foreground mt-1 text-center truncate w-full">{f.label}</span>
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div className="space-y-3 pt-2">
+                              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Manual Fine-Tune</span>
+                              
+                              {/* Grayscale */}
+                              <div className="space-y-1">
+                                <div className="flex justify-between items-center text-[10.5px] font-semibold text-muted-foreground">
+                                  <span>Saturation</span>
+                                  <span>{100 - effectGrayscale}%</span>
+                                </div>
+                                <input
+                                  type="range"
+                                  min={0}
+                                  max={100}
+                                  value={effectGrayscale}
+                                  onChange={(e) => updateOption("effectGrayscale", parseInt(e.target.value))}
+                                  className="w-full accent-primary h-1 cursor-pointer bg-secondary rounded-lg appearance-none"
+                                />
+                              </div>
+
+                              {/* Brightness */}
+                              <div className="space-y-1">
+                                <div className="flex justify-between items-center text-[10.5px] font-semibold text-muted-foreground">
+                                  <span>Brightness</span>
+                                  <span>{effectBrightness}%</span>
+                                </div>
+                                <input
+                                  type="range"
+                                  min={50}
+                                  max={150}
+                                  value={effectBrightness}
+                                  onChange={(e) => updateOption("effectBrightness", parseInt(e.target.value))}
+                                  className="w-full accent-primary h-1 cursor-pointer bg-secondary rounded-lg appearance-none"
+                                />
+                              </div>
+
+                              {/* Contrast */}
+                              <div className="space-y-1">
+                                <div className="flex justify-between items-center text-[10.5px] font-semibold text-muted-foreground">
+                                  <span>Contrast</span>
+                                  <span>{effectContrast}%</span>
+                                </div>
+                                <input
+                                  type="range"
+                                  min={50}
+                                  max={150}
+                                  value={effectContrast}
+                                  onChange={(e) => updateOption("effectContrast", parseInt(e.target.value))}
+                                  className="w-full accent-primary h-1 cursor-pointer bg-secondary rounded-lg appearance-none"
+                                />
+                              </div>
+
+                              {/* Sepia (Vintage) */}
+                              <div className="space-y-1">
+                                <div className="flex justify-between items-center text-[10.5px] font-semibold text-muted-foreground">
+                                  <span>Vintage (Sepia)</span>
+                                  <span>{effectSepia}%</span>
+                                </div>
+                                <input
+                                  type="range"
+                                  min={0}
+                                  max={100}
+                                  value={effectSepia}
+                                  onChange={(e) => updateOption("effectSepia", parseInt(e.target.value))}
+                                  className="w-full accent-primary h-1 cursor-pointer bg-secondary rounded-lg appearance-none"
+                                />
+                              </div>
+                            </div>
                           </div>
+                        )}
+                      </div>
 
-                          <div className="space-y-1">
-                            <span className="text-xs font-semibold text-muted-foreground">Offset Distance: {shadowOffset}px</span>
-                            <input
-                              type="range"
-                              min={0}
-                              max={30}
-                              value={shadowOffset}
-                              onChange={(e) => updateOption("shadowOffset", parseInt(e.target.value))}
-                              className="w-full accent-primary h-1.5 cursor-pointer bg-secondary rounded-lg appearance-none"
-                            />
+                      {/* CARD 2: Sticker Outline */}
+                      <div className="bg-background/40 border border-border/40 rounded-2xl overflow-hidden transition-all duration-300">
+                        {/* Header */}
+                        <div
+                          onClick={() => setExpandedEffectSec(expandedEffectSec === "outline" ? null : "outline")}
+                          className="w-full flex items-center justify-between p-4 hover:bg-muted/10 transition-colors text-left cursor-pointer"
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                              <Palette className="w-4 h-4" />
+                            </div>
+                            <div>
+                              <h4 className="text-xs font-bold text-foreground">Sticker Outline</h4>
+                              <p className="text-[9px] text-muted-foreground font-medium">Cutout outline border and thickness</p>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-3">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updateOption("strokeEnabled", !strokeEnabled);
+                              }}
+                              className={`w-9 h-5 rounded-full relative transition-colors duration-200 cursor-pointer ${strokeEnabled ? "bg-primary" : "bg-muted-foreground/30"}`}
+                            >
+                              <div className={`w-3.5 h-3.5 rounded-full bg-white absolute top-[3px] transition-all duration-200 ${strokeEnabled ? "left-[19px]" : "left-[3px]"}`} />
+                            </button>
+                            <svg className={`w-4 h-4 text-muted-foreground transition-transform duration-300 ${expandedEffectSec === "outline" || expandedEffectSec === "all" ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
                           </div>
                         </div>
-                      )}
+
+                        {/* Content */}
+                        {(expandedEffectSec === "outline" || expandedEffectSec === "all") && (
+                          <div className="p-4 pt-0 border-t border-border/20 bg-muted/5 space-y-4 animate-fade-in">
+                            <div className="pt-3 space-y-4">
+                              <div className="flex items-center gap-3 bg-muted/20 px-3 py-1.5 rounded-xl border border-border/30 w-fit">
+                                <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Color:</span>
+                                <div className="relative w-8 h-8 rounded-lg overflow-hidden border border-border/80 shadow-inner cursor-pointer">
+                                  <input
+                                    type="color"
+                                    value={strokeColor}
+                                    onChange={(e) => updateOption("strokeColor", e.target.value)}
+                                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                                  />
+                                  <div className="w-full h-full border border-border/20 rounded-md" style={{ backgroundColor: strokeColor }} />
+                                </div>
+                                <span className="text-[11px] font-mono font-bold text-foreground">{strokeColor.toUpperCase()}</span>
+                              </div>
+
+                              <div className="space-y-1">
+                                <span className="text-xs font-semibold text-muted-foreground">Outline Width: {strokeWidth}px</span>
+                                <input
+                                  type="range"
+                                  min={1}
+                                  max={30}
+                                  value={strokeWidth}
+                                  onChange={(e) => updateOption("strokeWidth", parseInt(e.target.value))}
+                                  className="w-full accent-primary h-1 cursor-pointer bg-secondary rounded-lg appearance-none"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* CARD 3: Glow & Shadow */}
+                      <div className="bg-background/40 border border-border/40 rounded-2xl overflow-hidden transition-all duration-300">
+                        {/* Header */}
+                        <div
+                          onClick={() => setExpandedEffectSec(expandedEffectSec === "shadow" ? null : "shadow")}
+                          className="w-full flex items-center justify-between p-4 hover:bg-muted/10 transition-colors text-left cursor-pointer"
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                              <Sparkles className="w-4 h-4 rotate-45" />
+                            </div>
+                            <div>
+                              <h4 className="text-xs font-bold text-foreground">Glow & Shadow</h4>
+                              <p className="text-[9px] text-muted-foreground font-medium">Soft back-glow and shadow offsets</p>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-3">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updateOption("shadowEnabled", !shadowEnabled);
+                              }}
+                              className={`w-9 h-5 rounded-full relative transition-colors duration-200 cursor-pointer ${shadowEnabled ? "bg-primary" : "bg-muted-foreground/30"}`}
+                            >
+                              <div className={`w-3.5 h-3.5 rounded-full bg-white absolute top-[3px] transition-all duration-200 ${shadowEnabled ? "left-[19px]" : "left-[3px]"}`} />
+                            </button>
+                            <svg className={`w-4 h-4 text-muted-foreground transition-transform duration-300 ${expandedEffectSec === "shadow" || expandedEffectSec === "all" ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+                          </div>
+                        </div>
+
+                        {/* Content */}
+                        {(expandedEffectSec === "shadow" || expandedEffectSec === "all") && (
+                          <div className="p-4 pt-0 border-t border-border/20 bg-muted/5 space-y-4 animate-fade-in">
+                            <div className="pt-3 space-y-4">
+                              <div className="flex items-center gap-3 bg-muted/20 px-3 py-1.5 rounded-xl border border-border/30 w-fit">
+                                <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Color:</span>
+                                <div className="relative w-8 h-8 rounded-lg overflow-hidden border border-border/80 shadow-inner cursor-pointer">
+                                  <input
+                                    type="color"
+                                    value={shadowColor}
+                                    onChange={(e) => updateOption("shadowColor", e.target.value)}
+                                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                                  />
+                                  <div className="w-full h-full border border-border/20 rounded-md" style={{ backgroundColor: shadowColor }} />
+                                </div>
+                                <span className="text-[11px] font-mono font-bold text-foreground">{shadowColor.toUpperCase()}</span>
+                              </div>
+
+                              <div className="space-y-1">
+                                <span className="text-xs font-semibold text-muted-foreground">Blur Radius: {shadowBlur}px</span>
+                                <input
+                                  type="range"
+                                  min={2}
+                                  max={50}
+                                  value={shadowBlur}
+                                  onChange={(e) => updateOption("shadowBlur", parseInt(e.target.value))}
+                                  className="w-full accent-primary h-1 cursor-pointer bg-secondary rounded-lg appearance-none"
+                                />
+                              </div>
+
+                              <div className="space-y-1">
+                                <span className="text-xs font-semibold text-muted-foreground">Offset Distance: {shadowOffset}px</span>
+                                <input
+                                  type="range"
+                                  min={0}
+                                  max={30}
+                                  value={shadowOffset}
+                                  onChange={(e) => updateOption("shadowOffset", parseInt(e.target.value))}
+                                  className="w-full accent-primary h-1 cursor-pointer bg-secondary rounded-lg appearance-none"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
                     </div>
                   )}
 
                 </div>
 
                 {/* ACTION BUTTONS FOOTER */}
-                <div className="flex-shrink-0 p-6 border-t border-border bg-card/40 backdrop-blur-xl z-10 mt-auto flex flex-col sm:flex-row gap-3 w-full">
+                <div className="flex-shrink-0 p-6 border-t border-border bg-card/40 backdrop-blur-xl z-10 mt-auto flex flex-col gap-4 w-full">
                   <button
                     onClick={handleDownload}
-                    className="flex-1 px-6 py-3.5 bg-primary text-primary-foreground font-bold rounded-xl shadow-md hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 text-sm flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full px-6 py-3.5 bg-primary text-primary-foreground font-bold rounded-xl shadow-md hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 text-sm flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <Download className="w-4 h-4" />
                     Export Image
-                  </button>
-
-                  <button
-                    onClick={handleReset}
-                    className="px-5 py-3.5 border border-border bg-background text-muted-foreground hover:text-foreground font-bold rounded-xl hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 text-sm flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    <RotateCcw className="w-4 h-4" />
-                    Reset
                   </button>
                 </div>
 
               </div>
 
               {/* RIGHT COLUMN: Live Canvas Preview */}
-              <div className="lg:col-span-7 flex flex-col space-y-2 lg:h-[540px]">
+              <div className="lg:col-span-7 flex flex-col lg:h-[600px]">
                 
-                {/* Header controls for Replace, Undo, Redo, and View Original */}
-                <div className="flex items-center justify-between px-1 flex-shrink-0">
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={handleReplaceClick}
-                      className="px-3 py-1.5 text-xs font-bold rounded-xl border border-border bg-card/60 hover:bg-muted text-foreground flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
-                    >
-                      <ImagePlus className="w-3.5 h-3.5 text-primary" />
-                      Replace
-                    </button>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    {/* Undo Button */}
-                    <button
-                      onClick={handleUndo}
-                      disabled={historyIndex <= 0}
-                      className="p-1.5 rounded-xl border border-border bg-card/60 hover:bg-muted text-foreground disabled:opacity-40 transition-all cursor-pointer shadow-sm"
-                      title="Undo"
-                    >
-                      <Undo2 className="w-3.5 h-3.5" />
-                    </button>
-
-                    {/* Redo Button */}
-                    <button
-                      onClick={handleRedo}
-                      disabled={historyIndex >= history.length - 1}
-                      className="p-1.5 rounded-xl border border-border bg-card/60 hover:bg-muted text-foreground disabled:opacity-40 transition-all cursor-pointer shadow-sm"
-                      title="Redo"
-                    >
-                      <Redo2 className="w-3.5 h-3.5" />
-                    </button>
-
-                    {/* Floating Original Toggle */}
-                    <div className="relative ml-1">
+                {/* Right card: header toolbar + preview as single rounded container */}
+                <div className="flex-1 flex flex-col bg-card border border-border/80 rounded-3xl overflow-hidden shadow-md">
+                  {/* Header toolbar */}
+                  <div className="flex items-center justify-between px-5 py-3 border-b border-border/40 bg-card/40 backdrop-blur-xl flex-shrink-0">
+                    <div className="flex items-center gap-2">
                       <button
-                        onMouseEnter={() => setShowOriginalFloat(true)}
-                        onMouseLeave={() => setShowOriginalFloat(false)}
-                        onClick={() => setShowOriginalFloat(!showOriginalFloat)}
-                        className="px-3 py-1.5 text-xs font-bold rounded-xl border border-border bg-card/60 hover:bg-muted text-foreground flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
+                        onClick={handleReplaceClick}
+                        className="px-4 py-2 text-xs font-bold rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-1.5 transition-all cursor-pointer shadow-sm animate-fade-in"
                       >
-                        <Eye className="w-3.5 h-3.5" />
-                        View Original
+                        <Upload className="w-3.5 h-3.5" />
+                        Replace
+                      </button>
+                    </div>
+
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={handleUndo}
+                        disabled={historyIndex <= 0}
+                        className="p-2 bg-background border border-border/80 text-foreground rounded-xl hover:bg-muted/50 disabled:opacity-40 cursor-pointer transition-all duration-200"
+                        title="Undo"
+                      >
+                        <Undo2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={handleRedo}
+                        disabled={historyIndex >= history.length - 1}
+                        className="p-2 bg-background border border-border/80 text-foreground rounded-xl hover:bg-muted/50 disabled:opacity-40 cursor-pointer transition-all duration-200"
+                        title="Redo"
+                      >
+                        <Redo2 className="w-4 h-4" />
                       </button>
 
-                      {showOriginalFloat && (
-                        <div className="absolute right-0 top-10 z-50 w-64 bg-card border border-border rounded-2xl p-2 shadow-2xl animate-fade-in pointer-events-none">
-                          <img 
-                            src={imageFile.previewUrl} 
-                            alt="Original" 
-                            className="w-full h-auto object-contain rounded-xl"
-                          />
-                        </div>
-                      )}
+                      {/* Toggle Original Preview */}
+                      <div className="relative ml-1">
+                        <button
+                          onClick={() => setShowOriginalFloat(!showOriginalFloat)}
+                          className={`px-3 py-2 text-xs font-bold rounded-xl border transition-all flex items-center gap-1.5 cursor-pointer shadow-sm ${showOriginalFloat ? "bg-primary/10 border-primary/40 text-primary" : "bg-background border-border/80 hover:bg-muted text-foreground"}`}
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          View Original
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Canvas Result Frame */}
-                <div
-                  className="w-full flex-1 rounded-3xl border-2 border-border overflow-hidden flex items-center justify-center min-h-[350px] lg:h-[500px] bg-card relative shadow-inner"
-                  style={resultUrl && bgType === "transparent" ? checkerStyle : undefined}
-                >
-                  {resultUrl ? (
-                    <div className="w-full h-full flex items-center justify-center relative group">
-                      <img src={resultUrl} alt="Result" className="max-w-full max-h-full object-contain p-4 animate-fade-in drop-shadow-lg" />
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center gap-3 text-muted-foreground/40 py-16 px-6 text-center">
-                      <Wand2 className="w-14 h-14" />
-                      <p className="text-sm font-semibold">Result will appear here</p>
-                    </div>
-                  )}
+                  {/* Preview Box */}
+                  <div 
+                    className="flex-1 flex items-center justify-center p-6 relative overflow-hidden select-none"
+                    style={(showOriginalFloat || (resultUrl && bgType === "transparent")) ? checkerStyle : undefined}
+                  >
+                    {(showOriginalFloat || (resultUrl && bgType === "transparent")) && (
+                      <div className="absolute inset-0 bg-checkerboard opacity-10 pointer-events-none z-0" />
+                    )}
+
+                    {showOriginalFloat ? (
+                      <div className="relative w-full h-full flex items-center justify-center z-10">
+                        <img src={imageFile.previewUrl} alt="Original Preview" className="max-w-full max-h-full object-contain p-4 animate-fade-in" />
+                      </div>
+                    ) : resultUrl ? (
+                      <div className="relative w-full h-full flex items-center justify-center z-10">
+                        <img src={resultUrl} alt="Result" className="max-w-full max-h-full object-contain p-4 animate-fade-in drop-shadow-lg" />
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-3 text-muted-foreground/40 py-16 px-6 text-center">
+                        <Wand2 className="w-14 h-14" />
+                        <p className="text-sm font-semibold">Result will appear here</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
               </div>
