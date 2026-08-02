@@ -8,6 +8,7 @@ export const features: Feature[] = [
   { id: "feat_svg-to-png", categorySlug: "convert", name: "SVG to PNG", slug: "svg-to-png", description: "Rasterize vector graphics easily.", icon: "lucide:shapes", highlight: false, isActive: true, order: 3, uiType: "converter" },
   { id: "feat_gif-to-mp4", categorySlug: "convert", name: "GIF to MP4", slug: "gif-to-mp4", description: "Convert animations to video files.", icon: "lucide:film", highlight: false, isActive: true, order: 4, uiType: "converter" },
   { id: "feat_image-to-pdf", categorySlug: "convert", name: "Image to PDF", slug: "image-to-pdf", description: "Convert any image into a PDF document instantly.", icon: "lucide:file-text", highlight: true, isActive: true, order: 5, uiType: "image-to-pdf" },
+  { id: "feat_heic-to-jpg", categorySlug: "convert", name: "HEIC to JPG Converter", slug: "heic-to-jpg", description: "Convert HEIC photos from iPhone to JPG or PNG format instantly.", icon: "lucide:file-image", highlight: false, isActive: true, order: 6, uiType: "converter" },
 
   // Compress
   { id: "feat_compress-images", categorySlug: "compress", name: "Compress images", slug: "compress-images", description: "Quickly shrink image file sizes.", icon: "lucide:shrink", highlight: true, isActive: true, order: 0, uiType: "compressor" },
