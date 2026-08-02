@@ -179,5 +179,37 @@ export const toolContents: Record<string, ToolGuide> = {
       }
     ],
     privacyNotes: "All visual calculations and photo filters run 100% inside your browser session. Photos never touch remote servers."
+  },
+  "image-to-pdf": {
+    title: "Convert Images to PDF",
+    steps: [
+      "Upload or drop one or multiple images onto the workspace.",
+      "Manage pages by reordering them or removing unneeded pages.",
+      "Select a page and go to the Layout tab to customize its size, margins, and image alignment, or copy it to all pages.",
+      "Set document metadata such as Title and Author in the Metadata tab.",
+      "Click 'Export PDF' to download the compiled PDF document directly to your device."
+    ],
+    features: [
+      "Multi-Page Compilation: Combine multiple images of various formats into a single, cohesive PDF document.",
+      "Per-Page Customization: Configure different page sizes (A4, Letter, Legal, Fit), margins, and alignments for each individual page.",
+      "Interactive Page Ordering: Reorder pages easily with dedicated Up/Down buttons or delete pages in one click.",
+      "Embedded Metadata: Personalize your PDF file by injecting custom document title and author names into the file metadata.",
+      "100% Offline Generation: PDF building is performed entirely inside your browser's sandboxed environment, keeping your files safe."
+    ],
+    faqs: [
+      {
+        question: "Is there a limit to how many images I can merge into a single PDF?",
+        answer: "There are no arbitrary software limits. Since the PDF is generated completely in your browser using your local device memory, you can easily compile dozens of images into a single PDF."
+      },
+      {
+        question: "Can I use images of different sizes in the same PDF?",
+        answer: "Yes, you can. You can configure each page individually—for example, setting some to match the original image size ('Fit') and others to A4 or Letter, or use the 'Apply to All' button to standardize them."
+      },
+      {
+        question: "Does this tool upload my documents to any server?",
+        answer: "No. All conversion operations and PDF rendering happen locally on your computer. Your files never leave your device, ensuring maximum privacy and security."
+      }
+    ],
+    privacyNotes: "Your files are processed 100% locally in your browser. No data is sent to our servers."
   }
 };
