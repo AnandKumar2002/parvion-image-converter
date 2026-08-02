@@ -45,12 +45,32 @@ export function ImageToPdfUI({ feature }: { feature: Feature }) {
 
   const handleReplaceFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0] && pdfImages.length > 0) {
-      const file = e.target.files[0];
+      let file = e.target.files[0];
       const validation = ImageValidationService.validate(file);
       if (!validation.isValid) return;
 
-      const previewUrl = URL.createObjectURL(file);
       const ext = file.name.split('.').pop()?.toLowerCase() as ImageExtension || 'unknown';
+      let previewUrl = URL.createObjectURL(file);
+
+      const isHeic = file.type === 'image/heic' || file.type === 'image/heif' || ext === 'heic' || ext === 'heif';
+      if (isHeic) {
+        try {
+          const heic2any = (await import('heic2any')).default;
+          const conversionResult = await heic2any({
+            blob: file,
+            toType: 'image/jpeg',
+            quality: 0.9
+          });
+          const blob = Array.isArray(conversionResult) ? conversionResult[0] : conversionResult;
+          file = new File([blob], file.name.replace(/\.(heic|heif)$/i, '.jpg'), {
+            type: 'image/jpeg'
+          });
+          previewUrl = URL.createObjectURL(file);
+        } catch (err) {
+          console.error("HEIC conversion failed:", err);
+          return;
+        }
+      }
 
       const oldImg = pdfImages[selectedPageIndex];
       if (oldImg) URL.revokeObjectURL(oldImg.previewUrl);
@@ -108,12 +128,32 @@ export function ImageToPdfUI({ feature }: { feature: Feature }) {
     const validImageFiles: PdfImageItem[] = [];
     
     for (let i = 0; i < files.length; i++) {
-      const file = files[i];
+      let file = files[i];
       const validation = ImageValidationService.validate(file);
       if (!validation.isValid) continue;
 
-      const previewUrl = URL.createObjectURL(file);
       const ext = file.name.split('.').pop()?.toLowerCase() as ImageExtension || 'unknown';
+      let previewUrl = URL.createObjectURL(file);
+
+      const isHeic = file.type === 'image/heic' || file.type === 'image/heif' || ext === 'heic' || ext === 'heif';
+      if (isHeic) {
+        try {
+          const heic2any = (await import('heic2any')).default;
+          const conversionResult = await heic2any({
+            blob: file,
+            toType: 'image/jpeg',
+            quality: 0.9
+          });
+          const blob = Array.isArray(conversionResult) ? conversionResult[0] : conversionResult;
+          file = new File([blob], file.name.replace(/\.(heic|heif)$/i, '.jpg'), {
+            type: 'image/jpeg'
+          });
+          previewUrl = URL.createObjectURL(file);
+        } catch (err) {
+          console.error("HEIC conversion failed:", err);
+          continue;
+        }
+      }
 
       // Load dimensions asynchronously
       await new Promise<void>((resolve) => {
