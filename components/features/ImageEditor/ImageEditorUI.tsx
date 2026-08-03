@@ -8,6 +8,7 @@ import { EditorSidebar } from "./EditorSidebar";
 import { useEditorStore, EditorTool } from "./store";
 import { SizeCheckerTool } from "./tools/SizeCheckerTool";
 import { WatermarkTool } from "./tools/WatermarkTool";
+import { TextTool } from "./tools/TextTool";
 import { CanvasService } from '@/src/services/canvasService';
 import { VideoConverterService } from '@/src/services/videoConverterService';
 import { 
@@ -26,7 +27,8 @@ import {
   ImagePlus,
   X,
   ChevronDown,
-  Upload
+  Upload,
+  Type
 } from "lucide-react";
 import ReactCrop, { type Crop as CropType } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
@@ -47,8 +49,9 @@ export function ImageEditorUI({ feature }: { feature: Feature }) {
     resizeHeight, setResizeHeight,
     maintainAspectRatio, setMaintainAspectRatio,
     watermarkType, watermarkText, watermarkOpacity,
-    watermarkSize, watermarkPosition, watermarkPadding, watermarkColor,
-    watermarkImage, watermarkRepeated,
+    watermarkSize, watermarkPosition, setWatermarkPosition, watermarkPadding, setWatermarkPadding, watermarkColor,
+    watermarkImage, watermarkRepeated, watermarkX, setWatermarkX, watermarkY, setWatermarkY,
+    textItems, selectedTextId, updateTextItem, setSelectedTextId,
     exportFormat, setExportFormat,
     resetEditor,
     past, future, commitHistory, undo, redo
@@ -85,6 +88,7 @@ export function ImageEditorUI({ feature }: { feature: Feature }) {
   const [customCropLinked, setCustomCropLinked] = useState<boolean>(false);
 
   const [isProcessing, setIsProcessing] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const imgRef = useRef<HTMLImageElement>(null);
   const [imgSize, setImgSize] = useState<{ width: number; height: number } | null>(null);
 
@@ -103,6 +107,22 @@ export function ImageEditorUI({ feature }: { feature: Feature }) {
     return () => window.removeEventListener('resize', updateImageSize);
   }, [imageFile]);
 
+  const getActualImageSize = () => {
+    if (!imgRef.current || !imgSize) return null;
+    const img = imgRef.current;
+    const naturalWidth = img.naturalWidth;
+    const naturalHeight = img.naturalHeight;
+    if (!naturalWidth || !naturalHeight) return null;
+
+    const visibleWidth = Math.min(imgSize.width, imgSize.height * (naturalWidth / naturalHeight));
+    const visibleHeight = Math.min(imgSize.height, imgSize.width * (naturalHeight / naturalWidth));
+
+    return {
+      width: visibleWidth,
+      height: visibleHeight,
+    };
+  };
+
   useEffect(() => {
     const timer = setTimeout(updateImageSize, 120);
     return () => clearTimeout(timer);
@@ -117,13 +137,12 @@ export function ImageEditorUI({ feature }: { feature: Feature }) {
     if (feature.slug === 'flip-images') defaultTool = 'flip';
     if (feature.slug === 'size-checker') defaultTool = 'size-checker';
     if (feature.slug === 'watermark') defaultTool = 'watermark';
+    if (feature.slug === 'add-text') defaultTool = 'text';
     
-    if (!isStudioMode) {
+    if (!isStudioMode && activeTool !== defaultTool) {
       setActiveTool(defaultTool);
-    } else if (activeTool === 'size-checker' || activeTool === 'watermark') {
-      // If we are in studio mode, keep the current active tool
     }
-  }, [feature.slug, isStudioMode, setActiveTool]);
+  }, [feature.slug, isStudioMode, activeTool, setActiveTool]);
 
   // Initialize dimensions on load
   useEffect(() => {
@@ -134,6 +153,145 @@ export function ImageEditorUI({ feature }: { feature: Feature }) {
       }
     }
   }, [imageFile, resizeWidth, resizeHeight, setResizeWidth, setResizeHeight]);
+
+  // Text dragging state & handlers
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const dragStartPos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const textStartPos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+
+  const handleTextDragStart = (e: React.MouseEvent | React.TouchEvent, id: string) => {
+    e.stopPropagation();
+    setSelectedTextId(id);
+    commitHistory();
+
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+
+    dragStartPos.current = { x: clientX, y: clientY };
+    const item = textItems.find((t) => t.id === id);
+    if (item) {
+      textStartPos.current = { x: item.x, y: item.y };
+      setDraggingId(id);
+    }
+  };
+
+  useEffect(() => {
+    if (!draggingId) return;
+
+    const handleMouseMove = (e: MouseEvent | TouchEvent) => {
+      const clientX = 'touches' in e ? e.touches[0].clientX : (e as MouseEvent).clientX;
+      const clientY = 'touches' in e ? e.touches[0].clientY : (e as MouseEvent).clientY;
+
+      const deltaX = clientX - dragStartPos.current.x;
+      const deltaY = clientY - dragStartPos.current.y;
+
+      const actualSize = getActualImageSize() || imgSize;
+      if (actualSize) {
+        const deltaXPct = (deltaX / actualSize.width) * 100;
+        const deltaYPct = (deltaY / actualSize.height) * 100;
+
+        const newX = Math.min(Math.max(0, textStartPos.current.x + deltaXPct), 100);
+        const newY = Math.min(Math.max(0, textStartPos.current.y + deltaYPct), 100);
+
+        updateTextItem(draggingId, { x: newX, y: newY });
+      }
+    };
+
+    const handleMouseUp = () => {
+      setDraggingId(null);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('touchmove', handleMouseMove);
+    window.addEventListener('touchend', handleMouseUp);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('touchmove', handleMouseMove);
+      window.removeEventListener('touchend', handleMouseUp);
+    };
+  }, [draggingId, imgSize, textItems, updateTextItem]);
+
+  // Watermark dragging state & handlers
+  const [draggingWatermark, setDraggingWatermark] = useState<boolean>(false);
+  const watermarkDragStartPos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const watermarkStartPos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+
+  const handleWatermarkDragStart = (e: React.MouseEvent | React.TouchEvent) => {
+    e.stopPropagation();
+    commitHistory();
+
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+
+    watermarkDragStartPos.current = { x: clientX, y: clientY };
+    
+    // If it's a preset position, convert it to custom center coordinates so it doesn't jump
+    if (watermarkPosition as string !== 'custom') {
+      const halfW = watermarkSize / 2;
+      const halfH = watermarkType === 'text' ? watermarkSize / 4 : watermarkSize / 2;
+      
+      let x = watermarkX;
+      let y = watermarkY;
+      
+      if (watermarkPosition.includes('left')) x = watermarkX + halfW;
+      if (watermarkPosition.includes('right')) x = watermarkX - halfW;
+      
+      if (watermarkPosition.includes('top')) y = watermarkY + halfH;
+      if (watermarkPosition.includes('bottom')) y = watermarkY - halfH;
+      
+      setWatermarkX(x);
+      setWatermarkY(y);
+      setWatermarkPosition('custom' as any);
+      watermarkStartPos.current = { x, y };
+    } else {
+      watermarkStartPos.current = { x: watermarkX, y: watermarkY };
+    }
+    
+    setDraggingWatermark(true);
+  };
+
+  useEffect(() => {
+    if (!draggingWatermark) return;
+
+    const handleMouseMove = (e: MouseEvent | TouchEvent) => {
+      const clientX = 'touches' in e ? e.touches[0].clientX : (e as MouseEvent).clientX;
+      const clientY = 'touches' in e ? e.touches[0].clientY : (e as MouseEvent).clientY;
+
+      const deltaX = clientX - watermarkDragStartPos.current.x;
+      const deltaY = clientY - watermarkDragStartPos.current.y;
+
+      const actualSize = getActualImageSize() || imgSize;
+      if (actualSize) {
+        const deltaXPct = (deltaX / actualSize.width) * 100;
+        const deltaYPct = (deltaY / actualSize.height) * 100;
+
+        const newX = Math.min(Math.max(0, watermarkStartPos.current.x + deltaXPct), 100);
+        const newY = Math.min(Math.max(0, watermarkStartPos.current.y + deltaYPct), 100);
+
+        setWatermarkX(newX);
+        setWatermarkY(newY);
+      }
+    };
+
+    const handleMouseUp = () => {
+      setDraggingWatermark(false);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('touchmove', handleMouseMove);
+    window.addEventListener('touchend', handleMouseUp);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('touchmove', handleMouseMove);
+      window.removeEventListener('touchend', handleMouseUp);
+    };
+  }, [draggingWatermark, imgSize, watermarkX, watermarkY, setWatermarkX, setWatermarkY]);
 
   // Generate Pattern URL for Live Preview
   useEffect(() => {
@@ -188,7 +346,7 @@ export function ImageEditorUI({ feature }: { feature: Feature }) {
         setPatternSize((tileWidth / vWidth) * 100);
       };
     }
-  }, [activeTool, watermarkRepeated, watermarkType, watermarkText, watermarkImage, watermarkSize, watermarkPadding, watermarkOpacity, watermarkColor]);
+  }, [activeTool, watermarkRepeated, watermarkType, watermarkText, watermarkImage, watermarkSize, watermarkPadding, watermarkOpacity, watermarkColor, watermarkX, watermarkY]);
 
   const handleFileSelect = (file: File) => {
     processFile(file);
@@ -320,67 +478,179 @@ export function ImageEditorUI({ feature }: { feature: Feature }) {
       }
       ctx.restore();
     } else {
+      // Free dragging position drawing
+      const x = (watermarkX * canvasWidth) / 100;
+      const y = (watermarkY * canvasHeight) / 100;
+
       if (watermarkType === 'text' && watermarkText) {
+        ctx.save();
+        const baseFontSize = (canvasWidth * watermarkSize) / 100;
+        ctx.font = `bold ${baseFontSize}px Arial`;
+        ctx.globalAlpha = watermarkOpacity / 100;
+        ctx.fillStyle = watermarkColor;
+        
+        let textAlign: CanvasTextAlign = 'center';
+        let textBaseline: CanvasTextBaseline = 'middle';
+        
+        if (watermarkPosition as string !== 'custom') {
+          if (watermarkPosition.includes('left')) textAlign = 'left';
+          if (watermarkPosition.includes('right')) textAlign = 'right';
+          
+          if (watermarkPosition.includes('top')) textBaseline = 'top';
+          if (watermarkPosition.includes('bottom')) textBaseline = 'bottom';
+        }
+        
+        ctx.textAlign = textAlign;
+        ctx.textBaseline = textBaseline;
+        
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+        ctx.shadowBlur = baseFontSize * 0.1;
+        ctx.shadowOffsetX = 2;
+        ctx.shadowOffsetY = 2;
+        
+        ctx.fillText(watermarkText, x, y);
+        ctx.restore();
+      } else if (watermarkType === 'image' && watermarkImage) {
+        ctx.save();
+        const img = new window.Image();
+        img.src = watermarkImage;
+        await new Promise((resolve) => {
+          img.onload = resolve;
+          img.onerror = resolve;
+        });
+        
+        ctx.globalAlpha = watermarkOpacity / 100;
+        
+        const targetWidth = (canvasWidth * watermarkSize) / 100;
+        const ratio = img.naturalHeight / img.naturalWidth;
+        const targetHeight = targetWidth * ratio;
+        
+        let offsetX = -targetWidth / 2;
+        let offsetY = -targetHeight / 2;
+        
+        if (watermarkPosition as string !== 'custom') {
+          if (watermarkPosition.includes('left')) offsetX = 0;
+          if (watermarkPosition.includes('center')) offsetX = -targetWidth / 2;
+          if (watermarkPosition.includes('right')) offsetX = -targetWidth;
+          
+          if (watermarkPosition.includes('top')) offsetY = 0;
+          if (watermarkPosition === 'center-left' || watermarkPosition === 'center' || watermarkPosition === 'center-right') offsetY = -targetHeight / 2;
+          if (watermarkPosition.includes('bottom')) offsetY = -targetHeight;
+        }
+        
+        ctx.drawImage(img, x + offsetX, y + offsetY, targetWidth, targetHeight);
+        ctx.restore();
+      }
+    }
+  };
+
+  const drawTextItems = (ctx: CanvasRenderingContext2D, canvasWidth: number, canvasHeight: number) => {
+    textItems.forEach((item) => {
       ctx.save();
+      ctx.globalAlpha = item.opacity / 100;
+      ctx.fillStyle = item.color;
       
-      const baseFontSize = (canvasWidth * watermarkSize) / 100;
-      ctx.font = `bold ${baseFontSize}px Arial`;
-      ctx.globalAlpha = watermarkOpacity / 100;
-      ctx.fillStyle = watermarkColor;
-      ctx.textAlign = 'center';
+      const xPos = (item.x * canvasWidth) / 100;
+      const yPos = (item.y * canvasHeight) / 100;
+      
+      const canvasFontSize = item.fontSize;
+      ctx.font = `${canvasFontSize}px ${item.fontFamily}`;
       ctx.textBaseline = 'middle';
+      ctx.textAlign = item.alignment;
       
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-      ctx.shadowBlur = baseFontSize * 0.1;
+      if (item.shadow) {
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+        ctx.shadowBlur = 6;
+        ctx.shadowOffsetX = 2;
+        ctx.shadowOffsetY = 2;
+      }
       
-      const paddingPx = (canvasWidth * watermarkPadding) / 100;
-      const metrics = ctx.measureText(watermarkText);
-      const textHeight = baseFontSize;
+      const maxWidth = canvasWidth * 0.8;
+      const lineHeight = canvasFontSize * 1.2;
       
-      let x = 0;
-      let y = 0;
+      // Wrap text algorithm
+      const paragraphs = item.text.split('\n');
+      const lines: string[] = [];
       
-      if (watermarkPosition.includes('left')) x = paddingPx + metrics.width / 2;
-      if (watermarkPosition.includes('center')) x = canvasWidth / 2;
-      if (watermarkPosition.includes('right')) x = canvasWidth - paddingPx - metrics.width / 2;
-      
-      if (watermarkPosition.includes('top')) y = paddingPx + textHeight / 2;
-      if (watermarkPosition === 'center-left' || watermarkPosition === 'center' || watermarkPosition === 'center-right') y = canvasHeight / 2;
-      if (watermarkPosition.includes('bottom')) y = canvasHeight - paddingPx - textHeight / 2;
-      
-      ctx.fillText(watermarkText, x, y);
-      ctx.restore();
-    } else if (watermarkType === 'image' && watermarkImage) {
-      ctx.save();
-      const img = new window.Image();
-      img.src = watermarkImage;
-      await new Promise((resolve) => {
-        img.onload = resolve;
-        img.onerror = resolve;
+      paragraphs.forEach((para) => {
+        const words = para.split(' ');
+        let currentLine = '';
+        
+        words.forEach((word) => {
+          const testLine = currentLine ? `${currentLine} ${word}` : word;
+          const metrics = ctx.measureText(testLine);
+          if (metrics.width > maxWidth && currentLine) {
+            lines.push(currentLine);
+            currentLine = word;
+          } else {
+            currentLine = testLine;
+          }
+        });
+        if (currentLine) {
+          lines.push(currentLine);
+        }
       });
       
-      ctx.globalAlpha = watermarkOpacity / 100;
-      const paddingPx = (canvasWidth * watermarkPadding) / 100;
+      const totalHeight = lines.length * lineHeight;
       
-      const targetWidth = (canvasWidth * watermarkSize) / 100;
-      const ratio = img.naturalHeight / img.naturalWidth;
-      const targetHeight = targetWidth * ratio;
+      // Draw background box highlight if enabled
+      if (item.backgroundColor && item.backgroundOpacity > 0) {
+        ctx.save();
+        ctx.globalAlpha = (item.opacity / 100) * (item.backgroundOpacity / 100);
+        ctx.fillStyle = item.backgroundColor;
+        
+        let maxLineWidth = 0;
+        lines.forEach((line) => {
+          const w = ctx.measureText(line).width;
+          if (w > maxLineWidth) maxLineWidth = w;
+        });
+        
+        const paddingPx = item.backgroundPadding;
+        const boxWidth = maxLineWidth + paddingPx * 2;
+        const boxHeight = totalHeight + paddingPx * 2;
+        
+        let boxX = xPos - paddingPx;
+        if (item.alignment === 'center') boxX = xPos - maxLineWidth / 2 - paddingPx;
+        if (item.alignment === 'right') boxX = xPos - maxLineWidth - paddingPx;
+        
+        const boxY = yPos - totalHeight / 2 - paddingPx;
+        const radius = 4;
+        
+        ctx.beginPath();
+        ctx.moveTo(boxX + radius, boxY);
+        ctx.lineTo(boxX + boxWidth - radius, boxY);
+        ctx.quadraticCurveTo(boxX + boxWidth, boxY, boxX + boxWidth, boxY + radius);
+        ctx.lineTo(boxX + boxWidth, boxY + boxHeight - radius);
+        ctx.quadraticCurveTo(boxX + boxWidth, boxY + boxHeight, boxX + boxWidth - radius, boxY + boxHeight);
+        ctx.lineTo(boxX + radius, boxY + boxHeight);
+        ctx.quadraticCurveTo(boxX, boxY + boxHeight, boxX, boxY + boxHeight - radius);
+        ctx.lineTo(boxX, boxY + radius);
+        ctx.quadraticCurveTo(boxX, boxY, boxX + radius, boxY);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
       
-      let x = 0;
-      let y = 0;
+      const startY = yPos - totalHeight / 2 + lineHeight / 2;
       
-      if (watermarkPosition.includes('left')) x = paddingPx;
-      if (watermarkPosition.includes('center')) x = (canvasWidth - targetWidth) / 2;
-      if (watermarkPosition.includes('right')) x = canvasWidth - targetWidth - paddingPx;
+      lines.forEach((line, index) => {
+        const lineY = startY + (index * lineHeight);
+        
+        // Draw stroke if enabled (stroke first to preserve fill weight)
+        if (item.strokeWidth > 0) {
+          ctx.save();
+          ctx.strokeStyle = item.strokeColor;
+          ctx.lineWidth = item.strokeWidth;
+          ctx.lineJoin = 'round';
+          ctx.strokeText(line, xPos, lineY);
+          ctx.restore();
+        }
+        
+        ctx.fillText(line, xPos, lineY);
+      });
       
-      if (watermarkPosition.includes('top')) y = paddingPx;
-      if (watermarkPosition === 'center-left' || watermarkPosition === 'center' || watermarkPosition === 'center-right') y = (canvasHeight - targetHeight) / 2;
-      if (watermarkPosition.includes('bottom')) y = canvasHeight - targetHeight - paddingPx;
-      
-      ctx.drawImage(img, x, y, targetWidth, targetHeight);
       ctx.restore();
-    }
-    }
+    });
   };
 
   const handleExport = async () => {
@@ -429,6 +699,9 @@ export function ImageEditorUI({ feature }: { feature: Feature }) {
       // Apply watermark if active
       await drawWatermark(ctx, canvas.width, canvas.height);
 
+      // Apply text layers
+      drawTextItems(ctx, canvas.width, canvas.height);
+
       const mimeType = exportFormat === 'original' ? imageFile.mimeType : exportFormat;
       let ext = mimeType.split('/')[1] || 'png';
       if (ext === 'jpeg') ext = 'jpg';
@@ -466,6 +739,7 @@ export function ImageEditorUI({ feature }: { feature: Feature }) {
     { id: 'flip', label: 'Flip', icon: <FlipHorizontal className="w-5 h-5" /> },
     { id: 'size-checker', label: 'Size', icon: <Info className="w-5 h-5" /> },
     { id: 'watermark', label: 'Watermark', icon: <Stamp className="w-5 h-5" /> },
+    { id: 'text', label: 'Text', icon: <Type className="w-5 h-5" /> },
   ] as const;
 
   if (!imageFile) {
@@ -805,6 +1079,10 @@ export function ImageEditorUI({ feature }: { feature: Feature }) {
             {activeTool === 'watermark' && (
               <WatermarkTool />
             )}
+
+            {activeTool === 'text' && (
+              <TextTool />
+            )}
           </>
         }
         exportButton={
@@ -913,7 +1191,10 @@ export function ImageEditorUI({ feature }: { feature: Feature }) {
           </div>
 
           {/* Preview Box */}
-          <div className="flex-1 flex items-center justify-center p-6 relative overflow-hidden select-none">
+          <div 
+            onClick={() => setSelectedTextId(null)}
+            className="flex-1 flex items-center justify-center p-6 relative overflow-hidden select-none"
+          >
             <div className="absolute inset-0 bg-checkerboard opacity-10 pointer-events-none z-0" />
             <div className="relative w-full h-full flex items-center justify-center z-10">
               {activeTool === 'crop' ? (
@@ -940,7 +1221,7 @@ export function ImageEditorUI({ feature }: { feature: Feature }) {
                       alt="Preview"
                       src={imageFile.previewUrl}
                       onLoad={updateImageSize}
-                      className={`max-h-full max-w-full shadow-2xl rounded-lg transition-all duration-300 ${activeTool === 'resize' ? '' : 'object-contain'}`}
+                      className={`max-h-full max-w-full shadow-2xl rounded-lg ${activeTool === 'resize' ? '' : 'object-contain'}`}
                       style={{ 
                         transform: `scale(${scaleX}, ${scaleY}) rotate(${rotation}deg)`,
                         ...(activeTool === 'resize' && resizeWidth && resizeHeight ? {
@@ -949,53 +1230,182 @@ export function ImageEditorUI({ feature }: { feature: Feature }) {
                         } : {})
                       }}
                     />
+                    {/* Live Preview Text Overlay */}
+                    {activeTool === 'text' && imgSize && (() => {
+                      const actualSize = getActualImageSize() || imgSize;
+                      const naturalWidth = imgRef.current?.naturalWidth || 800;
+                      const previewScale = actualSize.width / naturalWidth;
+                      
+                      return (
+                        <div 
+                          className="absolute select-none pointer-events-none"
+                          style={{
+                            width: `${actualSize.width}px`,
+                            height: `${actualSize.height}px`,
+                            top: '50%',
+                            left: '50%',
+                            transform: 'translate(-50%, -50%)',
+                          }}
+                        >
+                          {textItems.map((item) => {
+                            const isSelected = item.id === selectedTextId;
+                            const isEditing = item.id === editingId;
+                            const xPx = (item.x * actualSize.width) / 100;
+                            const yPx = (item.y * actualSize.height) / 100;
+                            
+                            const previewFontSize = item.fontSize * previewScale;
+                            const previewStrokeWidth = (item.strokeWidth || 0) * previewScale;
+                            const previewPadding = (item.backgroundPadding || 8) * previewScale;
+                            
+                            // Convert hex background color to hex+alpha for transparency
+                            const bgHex = item.backgroundColor || "#000000";
+                            const bgAlpha = Math.round(((item.backgroundOpacity || 0) / 100) * 255).toString(16).padStart(2, '0');
+                            const backgroundStyle = item.backgroundOpacity > 0 ? `${bgHex}${bgAlpha}` : 'transparent';
+                            
+                            return (
+                              <div
+                                key={item.id}
+                                onMouseDown={(e) => {
+                                  if (!isEditing) handleTextDragStart(e, item.id);
+                                }}
+                                onTouchStart={(e) => {
+                                  if (!isEditing) handleTextDragStart(e, item.id);
+                                }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedTextId(item.id);
+                                }}
+                                onDoubleClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingId(item.id);
+                                }}
+                                className={`absolute cursor-move select-none p-1 border rounded pointer-events-auto ${
+                                  isSelected 
+                                    ? 'border-primary ring-2 ring-primary/20' 
+                                    : 'border-transparent hover:border-border/60 hover:bg-card/25'
+                                }`}
+                                style={{
+                                  left: 0,
+                                  top: 0,
+                                  transform: `translate(calc(${xPx}px - 50%), calc(${yPx}px - 50%))`,
+                                  fontSize: `${previewFontSize}px`,
+                                  fontFamily: item.fontFamily,
+                                  color: item.color,
+                                  opacity: item.opacity / 100,
+                                  textShadow: item.shadow ? `${2 * previewScale}px ${2 * previewScale}px ${4 * previewScale}px rgba(0, 0, 0, 0.4)` : 'none',
+                                  textAlign: item.alignment,
+                                  whiteSpace: 'pre-wrap',
+                                  wordBreak: 'break-word',
+                                  maxWidth: '80%',
+                                  backgroundColor: backgroundStyle,
+                                  padding: `${previewPadding}px`,
+                                  borderRadius: `${4 * previewScale}px`,
+                                  WebkitTextStroke: previewStrokeWidth > 0 ? `${previewStrokeWidth}px ${item.strokeColor}` : 'initial',
+                                }}
+                              >
+                                {isEditing ? (
+                                  <textarea
+                                    value={item.text}
+                                    autoFocus
+                                    onChange={(e) => updateTextItem(item.id, { text: e.target.value })}
+                                    onBlur={() => {
+                                      setEditingId(null);
+                                      commitHistory();
+                                    }}
+                                    className="bg-transparent border-0 outline-none p-0 resize-none font-inherit text-inherit leading-inherit w-full h-full select-text pointer-events-auto min-w-[120px]"
+                                    style={{
+                                      color: item.color,
+                                      fontFamily: item.fontFamily,
+                                      textAlign: item.alignment,
+                                      fontSize: 'inherit',
+                                      WebkitTextStroke: 'initial', // Reset stroke on editing input for clarity
+                                      textShadow: 'none',
+                                    }}
+                                  />
+                                ) : (
+                                  item.text
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )})()}
                     {/* Live Preview Watermark Overlay */}
-                    {activeTool === 'watermark' && (
-                      <div 
-                        className="absolute pointer-events-none flex"
-                        style={{
-                          width: imgSize ? `${imgSize.width}px` : '100%',
-                          height: imgSize ? `${imgSize.height}px` : '100%',
-                          containerType: 'inline-size',
-                          alignItems: watermarkRepeated ? 'center' : watermarkPosition.includes('top') ? 'flex-start' : watermarkPosition.includes('bottom') ? 'flex-end' : 'center',
-                          justifyContent: watermarkRepeated ? 'center' : watermarkPosition.includes('left') ? 'flex-start' : watermarkPosition.includes('right') ? 'flex-end' : 'center',
-                          padding: watermarkRepeated ? 0 : `${watermarkPadding}%`,
-                        }}
-                      >
-                        {watermarkRepeated && patternUrl ? (
-                          <div 
-                            className="absolute inset-[-50%] bg-repeat pointer-events-none" 
-                            style={{ 
-                              backgroundImage: `url(${patternUrl})`,
-                              backgroundSize: `${patternSize * 0.75}%`, // Scaled for the rotated container
-                              transform: 'rotate(-30deg)',
-                            }}
-                          />
-                        ) : watermarkType === 'text' && watermarkText && !watermarkRepeated ? (
-                          <span 
-                            className="font-bold leading-none whitespace-nowrap"
-                            style={{
-                              color: watermarkColor,
-                              fontSize: `${watermarkSize}cqw`, 
-                              opacity: watermarkOpacity / 100,
-                              textShadow: '0px 0px 8px rgba(0,0,0,0.5)',
-                            }}
-                          >
-                            {watermarkText}
-                          </span>
-                        ) : watermarkType === 'image' && watermarkImage ? (
-                          <img 
-                            src={watermarkImage}
-                            alt="Watermark Overlay"
-                            style={{
-                              width: `${watermarkSize}%`,
-                              height: 'auto',
-                              opacity: watermarkOpacity / 100,
-                            }}
-                          />
-                        ) : null}
-                      </div>
-                    )}
+                    {activeTool === 'watermark' && imgSize && (() => {
+                      const actualSize = getActualImageSize() || imgSize;
+                      
+                      return (
+                        <div 
+                          className="absolute select-none pointer-events-none"
+                          style={{
+                            width: `${actualSize.width}px`,
+                            height: `${actualSize.height}px`,
+                            top: '50%',
+                            left: '50%',
+                            transform: 'translate(-50%, -50%)',
+                          }}
+                        >
+                          {watermarkRepeated && patternUrl ? (
+                            <div 
+                              className="absolute inset-[-50%] bg-repeat pointer-events-none" 
+                              style={{ 
+                                backgroundImage: `url(${patternUrl})`,
+                                backgroundSize: `${patternSize * 0.75}%`, // Scaled for the rotated container
+                                transform: 'rotate(-30deg)',
+                                opacity: watermarkOpacity / 100,
+                              }}
+                            />
+                          ) : (() => {
+                            let translateX = '-50%';
+                            let translateY = '-50%';
+                            
+                            if (watermarkPosition as string !== 'custom') {
+                              if (watermarkPosition.includes('left')) translateX = '0%';
+                              if (watermarkPosition.includes('right')) translateX = '-100%';
+                              
+                              if (watermarkPosition.includes('top')) translateY = '0%';
+                              if (watermarkPosition.includes('bottom')) translateY = '-100%';
+                            }
+                            
+                            return (
+                              <div
+                                onMouseDown={handleWatermarkDragStart}
+                                onTouchStart={handleWatermarkDragStart}
+                                className="absolute cursor-move select-none p-0 border border-dashed border-transparent hover:border-primary/45 active:border-primary/60 rounded hover:bg-primary/5 active:bg-primary/10 pointer-events-auto flex items-center justify-center"
+                                style={{
+                                  left: 0,
+                                  top: 0,
+                                  transform: `translate(calc(${(watermarkX * actualSize.width) / 100}px + ${translateX}), calc(${(watermarkY * actualSize.height) / 100}px + ${translateY}))`,
+                                  opacity: watermarkOpacity / 100,
+                                }}
+                              >
+                                {watermarkType === 'text' && watermarkText ? (
+                                  <span 
+                                    className="font-bold whitespace-nowrap"
+                                    style={{
+                                      color: watermarkColor,
+                                      fontSize: `${(watermarkSize * actualSize.width) / 100}px`,
+                                      textShadow: '0px 0px 8px rgba(0,0,0,0.5)',
+                                    }}
+                                  >
+                                    {watermarkText}
+                                  </span>
+                                ) : watermarkType === 'image' && watermarkImage ? (
+                                  <img 
+                                    src={watermarkImage}
+                                    alt="Watermark Overlay"
+                                    className="object-contain pointer-events-none"
+                                    style={{
+                                      width: `${(watermarkSize * actualSize.width) / 100}px`,
+                                      maxHeight: `${actualSize.height * 0.5}px`,
+                                    }}
+                                  />
+                                ) : null}
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      )})()}
                   </div>
                 </div>
               )}

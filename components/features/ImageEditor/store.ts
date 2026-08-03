@@ -1,13 +1,33 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { Crop } from 'react-image-crop';
+import { generateUniqueId } from '@/src/utils/fileUtils';
 
-export type EditorTool = 'crop' | 'resize' | 'rotate' | 'flip' | 'size-checker' | 'watermark';
+export type EditorTool = 'crop' | 'resize' | 'rotate' | 'flip' | 'size-checker' | 'watermark' | 'text';
 
 export type WatermarkPosition = 
   | 'top-left' | 'top-center' | 'top-right'
   | 'center-left' | 'center' | 'center-right'
   | 'bottom-left' | 'bottom-center' | 'bottom-right';
+
+export interface TextItem {
+  id: string;
+  text: string;
+  x: number; // percentage (0-100)
+  y: number; // percentage (0-100)
+  fontSize: number; // in pixels
+  fontFamily: string;
+  color: string;
+  opacity: number; // 0-100
+  shadow: boolean;
+  shadowColor: string;
+  alignment: 'left' | 'center' | 'right';
+  backgroundColor: string;
+  backgroundOpacity: number; // 0-100
+  backgroundPadding: number; // px
+  strokeColor: string;
+  strokeWidth: number; // px
+}
 
 interface EditorState {
   activeTool: EditorTool;
@@ -54,6 +74,18 @@ interface EditorState {
   setWatermarkColor: (color: string) => void;
   watermarkRepeated: boolean;
   setWatermarkRepeated: (repeated: boolean) => void;
+  watermarkX: number; // percentage (0-100)
+  setWatermarkX: (x: number) => void;
+  watermarkY: number; // percentage (0-100)
+  setWatermarkY: (y: number) => void;
+
+  // Text Tool State
+  textItems: TextItem[];
+  selectedTextId: string | null;
+  addTextItem: () => void;
+  updateTextItem: (id: string, updates: Partial<TextItem>) => void;
+  removeTextItem: (id: string) => void;
+  setSelectedTextId: (id: string | null) => void;
 
   exportFormat: 'original' | 'image/png' | 'image/jpeg' | 'image/webp' | 'image/gif' | 'image/svg+xml';
   setExportFormat: (format: 'original' | 'image/png' | 'image/jpeg' | 'image/webp' | 'image/gif' | 'image/svg+xml') => void;
@@ -89,6 +121,11 @@ const initialState = {
   watermarkPadding: 5,
   watermarkColor: '#ffffff',
   watermarkRepeated: false,
+  watermarkX: 85,
+  watermarkY: 90,
+  
+  textItems: [] as TextItem[],
+  selectedTextId: null as string | null,
   exportFormat: 'original' as const,
 };
 
@@ -109,6 +146,10 @@ const extractHistoryState = (state: EditorState) => ({
   watermarkPadding: state.watermarkPadding,
   watermarkColor: state.watermarkColor,
   watermarkRepeated: state.watermarkRepeated,
+  watermarkX: state.watermarkX,
+  watermarkY: state.watermarkY,
+  textItems: state.textItems.map(item => ({ ...item })), // deep clone items array
+  selectedTextId: state.selectedTextId,
 });
 
 export const useEditorStore = create<EditorState>()(
@@ -146,6 +187,44 @@ export const useEditorStore = create<EditorState>()(
       setWatermarkPadding: (watermarkPadding) => set({ watermarkPadding }),
       setWatermarkColor: (watermarkColor) => set({ watermarkColor }),
       setWatermarkRepeated: (watermarkRepeated) => set({ watermarkRepeated }),
+      setWatermarkX: (watermarkX) => set({ watermarkX }),
+      setWatermarkY: (watermarkY) => set({ watermarkY }),
+      
+      // Text Actions
+      addTextItem: () => set((state) => {
+        const newItem: TextItem = {
+          id: generateUniqueId(),
+          text: 'Double click to edit',
+          x: 50,
+          y: 50,
+          fontSize: 32,
+          fontFamily: 'Inter',
+          color: '#ffffff',
+          opacity: 100,
+          shadow: true,
+          shadowColor: '#000000',
+          alignment: 'center',
+          backgroundColor: '#000000',
+          backgroundOpacity: 0,
+          backgroundPadding: 8,
+          strokeColor: '#000000',
+          strokeWidth: 0,
+        };
+        return {
+          textItems: [...state.textItems, newItem],
+          selectedTextId: newItem.id,
+        };
+      }),
+      updateTextItem: (id, updates) => set((state) => ({
+        textItems: state.textItems.map((item) => 
+          item.id === id ? { ...item, ...updates } : item
+        ),
+      })),
+      removeTextItem: (id) => set((state) => ({
+        textItems: state.textItems.filter((item) => item.id !== id),
+        selectedTextId: state.selectedTextId === id ? null : state.selectedTextId,
+      })),
+      setSelectedTextId: (selectedTextId) => set({ selectedTextId }),
       
       setExportFormat: (exportFormat) => set({ exportFormat }),
 
