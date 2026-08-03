@@ -27,7 +27,5 @@ export const features: Feature[] = [
   { id: "feat_size-checker", categorySlug: "tools", name: "Image size checker", slug: "size-checker", description: "See exactly how big your file is.", icon: "lucide:info", highlight: false, isActive: true, order: 8, uiType: "editor" },
   { id: "feat_image-border", categorySlug: "tools", name: "Image Border & Frame", slug: "image-border", description: "Add stylish borders and frames around your images.", icon: "lucide:frame", highlight: true, isActive: true, order: 9, uiType: "border" },
   { id: "feat_image-filters", categorySlug: "tools", name: "Image Filters", slug: "image-filters", description: "Apply beautiful filters like grayscale, sepia, and vintage to your photos.", icon: "lucide:sparkles", highlight: true, isActive: true, order: 10, uiType: "filters" },
-
-  // --- IN PROGRESS: Unfinished Features (isActive: false) ---
-  { id: "feat_add-text", categorySlug: "tools", name: "Add Text to Image", slug: "add-text", description: "Add custom text, captions, and labels on top of your images.", icon: "lucide:type", highlight: false, isActive: false, isComingSoon: true, order: 12, uiType: "editor" },
+  { id: "feat_add-text", categorySlug: "tools", name: "Add Text to Image", slug: "add-text", description: "Add custom text, captions, and labels on top of your images.", icon: "lucide:type", highlight: false, isActive: true, order: 11, uiType: "editor" }
 ];

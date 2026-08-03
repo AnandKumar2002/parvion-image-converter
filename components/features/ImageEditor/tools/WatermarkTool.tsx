@@ -11,7 +11,24 @@ export function WatermarkTool() {
     watermarkColor, setWatermarkColor,
     watermarkImage, setWatermarkImage,
     watermarkRepeated, setWatermarkRepeated,
+    watermarkX, setWatermarkX,
+    watermarkY, setWatermarkY,
   } = useEditorStore();
+
+  const getPresetCoords = (pos: string, padding: number) => {
+    switch (pos) {
+      case 'top-left': return { x: padding, y: padding };
+      case 'top-center': return { x: 50, y: padding };
+      case 'top-right': return { x: 100 - padding, y: padding };
+      case 'center-left': return { x: padding, y: 50 };
+      case 'center': return { x: 50, y: 50 };
+      case 'center-right': return { x: 100 - padding, y: 50 };
+      case 'bottom-left': return { x: padding, y: 100 - padding };
+      case 'bottom-center': return { x: 50, y: 100 - padding };
+      case 'bottom-right': return { x: 100 - padding, y: 100 - padding };
+      default: return { x: 50, y: 50 };
+    }
+  };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -112,7 +129,12 @@ export function WatermarkTool() {
           {['top-left', 'top-center', 'top-right', 'center-left', 'center', 'center-right', 'bottom-left', 'bottom-center', 'bottom-right'].map((pos) => (
             <button
               key={pos}
-              onClick={() => setWatermarkPosition(pos as any)}
+              onClick={() => {
+                setWatermarkPosition(pos as any);
+                const coords = getPresetCoords(pos, watermarkPadding);
+                setWatermarkX(coords.x);
+                setWatermarkY(coords.y);
+              }}
               className={`rounded-md transition-colors border ${watermarkPosition === pos ? 'bg-primary border-primary' : 'bg-background border-border hover:bg-primary/20'}`}
               title={pos.replace('-', ' ')}
             />
@@ -162,7 +184,13 @@ export function WatermarkTool() {
             min="0"
             max="20"
             value={watermarkPadding}
-            onChange={(e) => setWatermarkPadding(Number(e.target.value))}
+            onChange={(e) => {
+              const val = Number(e.target.value);
+              setWatermarkPadding(val);
+              const coords = getPresetCoords(watermarkPosition, val);
+              setWatermarkX(coords.x);
+              setWatermarkY(coords.y);
+            }}
             className="w-full accent-primary"
           />
         </div>
