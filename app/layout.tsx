@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { ThemeProvider } from "@/components/layout/ThemeProvider";
+import { JsonLd } from "@/components/shared/JsonLd";
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -35,6 +36,35 @@ export const metadata: Metadata = {
   },
 };
 
+const websiteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Parvion Image Converter",
+  "url": "https://image.parvion.in",
+  "description": "Free browser-based image tools: convert, compress, crop, resize, filter, watermark, and remove backgrounds — with complete privacy.",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": {
+      "@type": "EntryPoint",
+      "urlTemplate": "https://image.parvion.in/{search_term_string}"
+    },
+    "query-input": "required name=search_term_string"
+  }
+};
+
+const organizationSchema = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Parvion",
+  "url": "https://image.parvion.in",
+  "logo": "https://image.parvion.in/icon.png",
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "email": "anandkumar101002@gmail.com",
+    "contactType": "customer support"
+  }
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -44,6 +74,8 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: `window.__name = function (func) { return func; }` }} />
+        <JsonLd schema={websiteSchema} />
+        <JsonLd schema={organizationSchema} />
       </head>
       <body className={`${inter.className} min-h-screen bg-background text-foreground selection:bg-cyan-500/30 font-sans flex relative`} suppressHydrationWarning>
         {process.env.NEXT_PUBLIC_ADSENSE_PUB_ID && (
