@@ -11,25 +11,32 @@ const LoadingFallback = () => (
 );
 
 const UniversalConverter = dynamic(() => import("./UniversalConverter/UniversalConverter").then(mod => mod.UniversalConverter), { 
-  loading: () => <LoadingFallback />
+  loading: () => <LoadingFallback />,
+  ssr: false
 });
 const CompressorUI = dynamic(() => import("./CompressorUI").then(mod => mod.CompressorUI), { 
-  loading: () => <LoadingFallback /> 
+  loading: () => <LoadingFallback />,
+  ssr: false
 });
 const ImageEditorUI = dynamic(() => import("./ImageEditor/ImageEditorUI").then(mod => mod.ImageEditorUI), { 
-  loading: () => <LoadingFallback /> 
+  loading: () => <LoadingFallback />,
+  ssr: false
 });
 const RemoveBgUI = dynamic(() => import("./RemoveBgUI").then(mod => mod.RemoveBgUI), {
-  loading: () => <LoadingFallback />
+  loading: () => <LoadingFallback />,
+  ssr: false
 });
 const ImageBorderUI = dynamic(() => import("./ImageBorderUI").then(mod => mod.ImageBorderUI), {
-  loading: () => <LoadingFallback />
+  loading: () => <LoadingFallback />,
+  ssr: false
 });
 const ImageFiltersUI = dynamic(() => import("./ImageFiltersUI").then(mod => mod.ImageFiltersUI), {
-  loading: () => <LoadingFallback />
+  loading: () => <LoadingFallback />,
+  ssr: false
 });
 const ImageToPdfUI = dynamic(() => import("./ImageToPdfUI").then(mod => mod.ImageToPdfUI), {
-  loading: () => <LoadingFallback />
+  loading: () => <LoadingFallback />,
+  ssr: false
 });
 
 export function FeatureWorkspace({ feature }: { feature: Feature }) {
