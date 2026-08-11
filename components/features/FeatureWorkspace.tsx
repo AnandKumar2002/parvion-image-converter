@@ -1,3 +1,5 @@
+"use client";
+
 import { Feature } from "@/src/types/feature";
 import dynamic from "next/dynamic";
 import { Loader2 } from "lucide-react";
