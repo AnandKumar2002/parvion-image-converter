@@ -89,6 +89,17 @@ export default function AppSidebar() {
                 Home
               </Link>
 
+              <Link
+                href="/guides"
+                className={`flex items-center gap-3 px-4 py-2.5 rounded-lg font-medium transition-all ${pathname === "/guides" || pathname.startsWith("/guides/")
+                    ? "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 shadow-[0_0_15px_-3px_rgba(6,182,212,0.15)]"
+                    : "text-muted-foreground hover:text-foreground hover:bg-foreground/5"
+                  }`}
+              >
+                <DynamicIcon icon="lucide:book-open" className="w-5 h-5" />
+                Guides
+              </Link>
+
               {activeCategories.map((item) => (
                 <div key={item.id} className="flex flex-col">
                   <div

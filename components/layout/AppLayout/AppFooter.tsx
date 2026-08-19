@@ -30,6 +30,7 @@ export default function AppFooter() {
             <ul className="space-y-3 text-sm text-muted-foreground">
               <li><Link href="/about" className="hover:text-cyan-400 transition-colors">About Us</Link></li>
               <li><Link href="/contact" className="hover:text-cyan-400 transition-colors">Contact Us</Link></li>
+              <li><Link href="/guides" className="hover:text-cyan-400 transition-colors">Guides & Tutorials</Link></li>
               <li><Link href="/terms" className="hover:text-cyan-400 transition-colors">Terms and Conditions</Link></li>
               <li><Link href="/privacy" className="hover:text-cyan-400 transition-colors">Privacy Policy</Link></li>
             </ul>

@@ -85,6 +85,16 @@ export default function AppHeader() {
             </div>
           </div>
         ))}
+        <div className="group h-full flex items-center relative">
+          <Link 
+            href="/guides"
+            className={`px-4 py-2 text-sm flex items-center gap-1 transition-colors h-full ${
+              pathname === '/guides' || pathname.startsWith('/guides/') ? 'text-primary font-bold' : 'text-muted-foreground hover:text-foreground font-medium'
+            }`}
+          >
+            Guides
+          </Link>
+        </div>
         
       </nav>
 
