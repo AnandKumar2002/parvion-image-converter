@@ -55,9 +55,9 @@ export function AdPlaceholder({ className = "", adSlot = "" }: { className?: str
     }
   }, [isReady, publisherId]);
 
-  if (!publisherId) {
+  if (!publisherId || !adSlot) {
     return (
-      <div className={`w-full h-full bg-primary rounded-lg opacity-80 flex items-center justify-center ${className}`}>
+      <div className={`w-full min-h-[90px] h-full bg-primary rounded-lg opacity-80 flex items-center justify-center ${className}`}>
         <span className="text-xs text-primary-foreground uppercase font-bold tracking-widest">
           Advertisement
         </span>
@@ -72,7 +72,7 @@ export function AdPlaceholder({ className = "", adSlot = "" }: { className?: str
           className="adsbygoogle"
           style={{ display: "block", width: "100%", height: "100%" }}
           data-ad-client={publisherId}
-          data-ad-slot={adSlot || "auto"}
+          data-ad-slot={adSlot}
           data-ad-format="auto"
           data-full-width-responsive="true"
         />
