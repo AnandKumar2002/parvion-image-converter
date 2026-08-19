@@ -40,12 +40,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title: `${category.title} Images Online — Free Tools | Parvion`,
     description: descriptions[categorySlug] || catContent?.editorNote || category.description,
     alternates: {
-      canonical: `https://image.parvion.in/${categorySlug}`,
+      canonical: `https://parvion.in/${categorySlug}`,
     },
     openGraph: {
       title: `${category.title} Images Online — Free Tools | Parvion`,
       description: descriptions[categorySlug] || category.description,
-      url: `https://image.parvion.in/${categorySlug}`,
+      url: `https://parvion.in/${categorySlug}`,
       type: "website",
     },
   };
@@ -72,7 +72,7 @@ export default async function CategoryPage({ params }: PageProps) {
     "@type": "ItemList",
     "name": `${category.title} Image Tools`,
     "description": category.description,
-    "url": `https://image.parvion.in/${categorySlug}`,
+    "url": `https://parvion.in/${categorySlug}`,
     "numberOfItems": categoryFeatures.filter((f) => !f.isComingSoon).length,
     "itemListElement": categoryFeatures
       .filter((f) => !f.isComingSoon)
@@ -81,7 +81,7 @@ export default async function CategoryPage({ params }: PageProps) {
         "position": idx + 1,
         "name": f.name,
         "description": f.description,
-        "url": `https://image.parvion.in/${categorySlug}/${f.slug}`,
+        "url": `https://parvion.in/${categorySlug}/${f.slug}`,
       })),
   };
 

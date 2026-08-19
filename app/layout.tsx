@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://image.parvion.in",
+    url: "https://parvion.in",
     title: "Parvion Image Converter - Free Online Image Tools",
     description: "Convert, compress, and edit your images instantly. 100% private, client-side processing.",
     siteName: "Parvion",
@@ -40,13 +40,13 @@ const websiteSchema = {
   "@context": "https://schema.org",
   "@type": "WebSite",
   "name": "Parvion Image Converter",
-  "url": "https://image.parvion.in",
+  "url": "https://parvion.in",
   "description": "Free browser-based image tools: convert, compress, crop, resize, filter, watermark, and remove backgrounds — with complete privacy.",
   "potentialAction": {
     "@type": "SearchAction",
     "target": {
       "@type": "EntryPoint",
-      "urlTemplate": "https://image.parvion.in/{search_term_string}"
+      "urlTemplate": "https://parvion.in/{search_term_string}"
     },
     "query-input": "required name=search_term_string"
   }
@@ -56,8 +56,8 @@ const organizationSchema = {
   "@context": "https://schema.org",
   "@type": "Organization",
   "name": "Parvion",
-  "url": "https://image.parvion.in",
-  "logo": "https://image.parvion.in/icon.png",
+  "url": "https://parvion.in",
+  "logo": "https://parvion.in/icon.png",
   "contactPoint": {
     "@type": "ContactPoint",
     "email": "anandkumar101002@gmail.com",

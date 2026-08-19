@@ -56,12 +56,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       "Parvion",
     ],
     alternates: {
-      canonical: `https://image.parvion.in/${categorySlug}/${featureSlug}`,
+      canonical: `https://parvion.in/${categorySlug}/${featureSlug}`,
     },
     openGraph: {
       title: `${feature.name} — Free Online Tool | Parvion`,
       description: feature.description,
-      url: `https://image.parvion.in/${categorySlug}/${featureSlug}`,
+      url: `https://parvion.in/${categorySlug}/${featureSlug}`,
       type: "website",
     },
   };
@@ -86,7 +86,7 @@ export default async function FeaturePage({ params }: PageProps) {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     "name": `Parvion ${feature.name}`,
-    "url": `https://image.parvion.in/${categorySlug}/${featureSlug}`,
+    "url": `https://parvion.in/${categorySlug}/${featureSlug}`,
     "description": feature.description,
     "applicationCategory": "MultimediaApplication",
     "operatingSystem": "Any (Web Browser)",

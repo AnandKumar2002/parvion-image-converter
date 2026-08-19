@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   description:
     "Convert JPG, PNG, WebP, HEIC & more. Compress images, remove backgrounds with AI, crop, resize, add watermarks, apply filters — 20+ free tools that run entirely in your browser. No uploads, no account, complete privacy.",
   alternates: {
-    canonical: "https://image.parvion.in",
+    canonical: "https://parvion.in",
   },
 };
 
