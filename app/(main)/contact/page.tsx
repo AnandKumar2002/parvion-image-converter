@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import { Mail, MessageSquare } from "lucide-react";
+import PageHeader from "@/components/shared/PageHeader";
 
 export const metadata: Metadata = {
   title: "Contact Us | Parvion Image Converter",
@@ -8,15 +9,14 @@ export const metadata: Metadata = {
 
 export default function ContactPage() {
   return (
-    <div className="w-full max-w-4xl mx-auto py-12 px-4 sm:px-6">
-      <div className="text-center mb-16 space-y-4">
-        <h1 className="text-4xl md:text-5xl font-black tracking-tight">
-          Get in <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">Touch</span>
-        </h1>
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          Have a question, feedback, or need support? We'd love to hear from you.
-        </p>
-      </div>
+    <div className="w-full max-w-5xl mx-auto py-12 px-4 sm:px-6">
+      <PageHeader
+        title="Contact Us"
+        description="Have a question, feedback, or need support? We'd love to hear from you."
+        icon="lucide:mail"
+        color="text-indigo-500"
+        bg="bg-indigo-500/10"
+      />
 
       <div className="grid md:grid-cols-2 gap-8">
         {/* Direct Email Card */}
@@ -49,8 +49,11 @@ export default function ContactPage() {
             </p>
             
             <div className="flex gap-4">
-              <a href="https://www.instagram.com/__.anand._______/" target="_blank" rel="noopener noreferrer" className="w-12 h-12 rounded-lg bg-background border border-border flex items-center justify-center hover:bg-foreground/5 hover:text-pink-500 transition-colors">
+              <a href="https://www.instagram.com/__.anand._______/" target="_blank" rel="noopener noreferrer" className="w-12 h-12 rounded-lg bg-background border border-border flex items-center justify-center hover:bg-foreground/5 hover:text-pink-500 transition-colors" title="Instagram">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+              </a>
+              <a href="http://linkedin.com/in/01anand-kumar/" target="_blank" rel="noopener noreferrer" className="w-12 h-12 rounded-lg bg-background border border-border flex items-center justify-center hover:bg-foreground/5 hover:text-blue-500 transition-colors" title="LinkedIn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg>
               </a>
             </div>
           </div>

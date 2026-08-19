@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import PageHeader from "@/components/shared/PageHeader";
 
 export const metadata: Metadata = {
   title: "Terms and Conditions | Parvion Image Converter",
@@ -7,12 +8,14 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <div className="w-full max-w-4xl mx-auto py-12 px-4 sm:px-6">
-      <div className="mb-12 border-b border-border pb-8">
-        <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-4">
-          Terms and Conditions
-        </h1>
-      </div>
+    <div className="w-full max-w-5xl mx-auto py-12 px-4 sm:px-6">
+      <PageHeader
+        title="Terms & Conditions"
+        description="Read the Terms and Conditions for using Parvion Image Converter's free online tools."
+        icon="lucide:file-text"
+        color="text-emerald-500"
+        bg="bg-emerald-500/10"
+      />
 
       <div className="prose prose-slate dark:prose-invert max-w-none prose-headings:font-bold prose-headings:tracking-tight prose-a:text-cyan-500 hover:prose-a:text-cyan-400">
         <p className="text-lg text-muted-foreground mb-8 leading-relaxed">

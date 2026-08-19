@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import { ShieldCheck, Zap, Globe, Heart, Lock, Code2, User } from "lucide-react";
+import PageHeader from "@/components/shared/PageHeader";
 
 export const metadata: Metadata = {
   title: "About Us | Parvion Image Converter",
@@ -72,19 +73,13 @@ export default function AboutPage() {
 
   return (
     <div className="w-full max-w-5xl mx-auto py-12 px-4 sm:px-6">
-      {/* Hero */}
-      <div className="text-center mb-16 space-y-4">
-        <h1 className="text-4xl md:text-6xl font-black tracking-tight">
-          About{" "}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
-            Parvion
-          </span>
-        </h1>
-        <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-          A free, privacy-first suite of browser-based image tools — built so you never have to
-          upload your photos to a stranger's server again.
-        </p>
-      </div>
+      <PageHeader
+        title="About Us"
+        description="Learn about Parvion Image Converter — a free, privacy-first suite of browser-based image tools."
+        icon="lucide:info"
+        color="text-blue-500"
+        bg="bg-blue-500/10"
+      />
 
       {/* Our Story */}
       <div className="grid md:grid-cols-2 gap-12 items-center mb-24">
@@ -106,18 +101,13 @@ export default function AboutPage() {
             compression, and editing — all completely free and all processed entirely on your device.
           </p>
         </div>
-        <div className="relative h-[400px] rounded-2xl overflow-hidden bg-card/50 border border-border flex items-center justify-center p-8">
-          <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-blue-500/10"></div>
-          <div className="relative z-10 w-full h-full flex items-center justify-center">
-            {/* Visual representation of local processing */}
-            <div className="relative w-48 h-48">
-              <div className="absolute inset-0 border-4 border-dashed border-cyan-500/30 rounded-full animate-[spin_10s_linear_infinite]"></div>
-              <div className="absolute inset-4 border-4 border-dashed border-blue-500/30 rounded-full animate-[spin_15s_linear_infinite_reverse]"></div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <ShieldCheck className="w-16 h-16 text-cyan-400" />
-              </div>
-            </div>
-          </div>
+        <div className="relative h-[400px] rounded-2xl overflow-hidden bg-card/50 border border-border flex items-center justify-center">
+          <img 
+            src="/local-processing.jpg" 
+            alt="Secure Browser-Based Local Processing Illustration" 
+            className="w-full h-full object-cover select-none pointer-events-none"
+            loading="lazy"
+          />
         </div>
       </div>
 
@@ -239,6 +229,14 @@ export default function AboutPage() {
                 className="text-xs text-cyan-500 hover:underline font-semibold"
               >
                 Instagram
+              </a>
+              <a
+                href="http://linkedin.com/in/01anand-kumar/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-cyan-500 hover:underline font-semibold"
+              >
+                LinkedIn
               </a>
             </div>
           </div>
