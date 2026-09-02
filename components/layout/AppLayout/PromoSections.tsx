@@ -56,10 +56,10 @@ export function PromoSection({ side }: { side: "left" | "right" }) {
           </div>
         </div>
 
-        {/* Real AdSense Slot */}
-        {!isComingSoonPage && (
+        {/* Real AdSense Slot - only renders when adSlot is active */}
+        {!isComingSoonPage && process.env.NEXT_PUBLIC_ADSENSE_SLOT_ID && (
           <div className="flex-1 flex items-center justify-center overflow-hidden">
-            <AdPlaceholder className="!h-full overflow-hidden" />
+            <AdPlaceholder adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_ID} className="!h-full overflow-hidden" />
           </div>
         )}
 

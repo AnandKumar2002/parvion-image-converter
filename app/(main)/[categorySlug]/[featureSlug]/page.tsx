@@ -216,10 +216,10 @@ export default async function FeaturePage({ params }: PageProps) {
         </div>
       )}
 
-      {/* Ad slot (Only loaded on active, fully functional tool pages) */}
-      {!feature.isComingSoon && (
+      {/* Ad slot (Only loaded on active, fully functional tool pages when adSlot is present) */}
+      {!feature.isComingSoon && process.env.NEXT_PUBLIC_ADSENSE_SLOT_ID && (
         <div className="w-full mt-6">
-          <AdPlaceholder />
+          <AdPlaceholder adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_ID} />
         </div>
       )}
     </div>

@@ -155,9 +155,11 @@ export default function AppSidebar() {
           </div>
         </div>
 
-        <div className="p-6 flex-shrink-0 border-t border-border">
-          <AdPlaceholder />
-        </div>
+        {process.env.NEXT_PUBLIC_ADSENSE_SLOT_ID && (
+          <div className="p-6 flex-shrink-0 border-t border-border">
+            <AdPlaceholder adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_ID} />
+          </div>
+        )}
       </aside>
     </>
   );

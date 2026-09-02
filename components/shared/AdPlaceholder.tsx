@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { features } from "@/src/data/features";
 
 export function AdPlaceholder({ className = "", adSlot = "" }: { className?: string, adSlot?: string }) {
-  const publisherId = process.env.NEXT_PUBLIC_ADSENSE_PUB_ID;
+  const publisherId = process.env.NEXT_PUBLIC_ADSENSE_PUB_ID || "ca-pub-8823925019937744";
   const containerRef = useRef<HTMLDivElement>(null);
   const [isReady, setIsReady] = useState(false);
   const pathname = usePathname();
@@ -13,12 +13,8 @@ export function AdPlaceholder({ className = "", adSlot = "" }: { className?: str
   // Check if current page is a coming-soon or under-construction route
   const isComingSoonPage = pathname ? features.some(f => f.isComingSoon && pathname.endsWith(`/${f.slug}`)) : false;
 
-  if (isComingSoonPage) {
-    return null;
-  }
-
   useEffect(() => {
-    if (!publisherId || typeof window === "undefined") return;
+    if (!publisherId || !adSlot || typeof window === "undefined") return;
 
     const checkVisibility = () => {
       if (containerRef.current && containerRef.current.offsetWidth > 0) {
@@ -30,7 +26,6 @@ export function AdPlaceholder({ className = "", adSlot = "" }: { className?: str
 
     if (checkVisibility()) return;
 
-    // Watch for resizes or display changes to become visible
     const observer = new ResizeObserver(() => {
       if (checkVisibility()) {
         observer.disconnect();
@@ -42,10 +37,10 @@ export function AdPlaceholder({ className = "", adSlot = "" }: { className?: str
     }
 
     return () => observer.disconnect();
-  }, [publisherId]);
+  }, [publisherId, adSlot]);
 
   useEffect(() => {
-    if (isReady && publisherId) {
+    if (isReady && publisherId && adSlot) {
       try {
         // @ts-ignore
         (window.adsbygoogle = window.adsbygoogle || []).push({});
@@ -53,16 +48,10 @@ export function AdPlaceholder({ className = "", adSlot = "" }: { className?: str
         console.error("AdSense error", e);
       }
     }
-  }, [isReady, publisherId]);
+  }, [isReady, publisherId, adSlot]);
 
-  if (!publisherId || !adSlot) {
-    return (
-      <div className={`w-full min-h-[90px] h-full bg-primary rounded-lg opacity-80 flex items-center justify-center ${className}`}>
-        <span className="text-xs text-primary-foreground uppercase font-bold tracking-widest">
-          Advertisement
-        </span>
-      </div>
-    );
+  if (isComingSoonPage || !publisherId || !adSlot) {
+    return null;
   }
 
   return (

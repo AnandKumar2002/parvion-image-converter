@@ -59,9 +59,11 @@ export default function FeatureCategories() {
             </Link>
           </div>
 
-          <div className="w-full mt-20 -mb-4">
-             <AdPlaceholder />
-          </div>
+          {process.env.NEXT_PUBLIC_ADSENSE_SLOT_ID && (
+            <div className="w-full mt-20 -mb-4">
+              <AdPlaceholder adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_ID} />
+            </div>
+          )}
         </div>
       ))}
     </section>

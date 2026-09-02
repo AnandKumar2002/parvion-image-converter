@@ -142,9 +142,11 @@ export default async function CategoryPage({ params }: PageProps) {
         })}
       </div>
 
-      <div className="w-full mt-2">
-         <AdPlaceholder />
-      </div>
+      {process.env.NEXT_PUBLIC_ADSENSE_SLOT_ID && (
+        <div className="w-full mt-2">
+          <AdPlaceholder adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_ID} />
+        </div>
+      )}
 
       {/* Category Editorial Content: Explanatory text + supported formats + FAQs */}
       {catContent && (

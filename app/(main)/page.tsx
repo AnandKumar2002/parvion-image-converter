@@ -24,10 +24,12 @@ export default function Home() {
         </div>
       </HeroSection>
 
-      {/* Full Width Ad Slot after Hero Section */}
-      <div className="w-full mt-2 mb-4">
-        <AdPlaceholder />
-      </div>
+      {/* Full Width Ad Slot after Hero Section - only when adSlot is active */}
+      {process.env.NEXT_PUBLIC_ADSENSE_SLOT_ID && (
+        <div className="w-full mt-2 mb-4">
+          <AdPlaceholder adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_ID} />
+        </div>
+      )}
 
       <ValuePropsSection />
 
