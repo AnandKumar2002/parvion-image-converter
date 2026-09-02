@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, BookOpen, ArrowRight } from "lucide-react";
+import { guides } from "@/src/data/guides";
 
 const FORMAT_TABLE = [
   { format: "JPG / JPEG", best: "Photographs, social media", transparent: "No", size: "Small" },
@@ -169,6 +170,58 @@ export default function HomeSEOContent() {
                 {faq.a}
               </p>
             </details>
+          ))}
+        </div>
+      </section>
+
+      {/* Featured Guides & Tutorials Section */}
+      <section className="w-full space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <div className="space-y-1 text-left">
+            <div className="flex items-center gap-2 text-cyan-500 text-xs font-bold uppercase tracking-wider">
+              <BookOpen className="w-4 h-4" />
+              <span>Knowledge Hub</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
+              Image Optimization Guides &amp; Tutorials
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Deep-dive technical guides on image science, privacy, Core Web Vitals, and next-gen formats.
+            </p>
+          </div>
+          <Link
+            href="/guides"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-cyan-500 hover:text-cyan-400 transition-colors shrink-0"
+          >
+            <span>View all {guides.length} guides</span>
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {guides.slice(0, 6).map((guide) => (
+            <Link
+              key={guide.slug}
+              href={`/guides/${guide.slug}`}
+              className="group flex flex-col p-6 rounded-2xl bg-card/60 border border-border hover:border-cyan-500/40 hover:shadow-xl transition-all duration-300 text-left"
+            >
+              <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
+                <span className="px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-500 font-semibold text-[11px]">
+                  {guide.category}
+                </span>
+                <span>{guide.readTime}</span>
+              </div>
+              <h3 className="text-base font-bold text-foreground group-hover:text-cyan-400 transition-colors line-clamp-2 mb-2">
+                {guide.title}
+              </h3>
+              <p className="text-xs text-muted-foreground line-clamp-3 leading-relaxed flex-1">
+                {guide.excerpt}
+              </p>
+              <div className="mt-4 pt-3 border-t border-border/40 flex items-center gap-1.5 text-xs font-semibold text-cyan-500 group-hover:text-cyan-400">
+                <span>Read Full Article</span>
+                <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+              </div>
+            </Link>
           ))}
         </div>
       </section>
