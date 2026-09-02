@@ -78,14 +78,12 @@ export default function RootLayout({
         <JsonLd schema={organizationSchema} />
       </head>
       <body className={`${inter.className} min-h-screen bg-background text-foreground selection:bg-cyan-500/30 font-sans flex relative`} suppressHydrationWarning>
-        {process.env.NEXT_PUBLIC_ADSENSE_PUB_ID && (
-          <Script
-            async
-            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_PUB_ID}`}
-            crossOrigin="anonymous"
-            strategy="afterInteractive"
-          />
-        )}
+        <Script
+          async
+          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_PUB_ID || "ca-pub-8823925019937744"}`}
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
         <Script id="microsoft-clarity" strategy="afterInteractive">
           {`
             (function(c,l,a,r,i,t,y){
